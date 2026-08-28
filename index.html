@@ -14,6 +14,7 @@
     --gold:#ffcc33;
     --p1-trim:#2f8fe0;
     --p2-trim:#ff5577;
+    --touch-scale:1;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
@@ -60,10 +61,11 @@
   #canvasWrap{ position:relative; border-radius:2px; overflow:hidden; box-shadow: inset 0 0 0 3px #0a0612; max-width:100%; }
   canvas{display:block; image-rendering:pixelated; max-width:100%; height:auto;}
   .overlay{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
     background:rgba(10,6,18,.94); gap:14px; text-align:center; padding:20px; overflow-y:auto;
   }
   .overlay.hidden{display:none;}
+  .hidden{display:none !important;}
   .overlay h2{ font-size:18px; color:var(--gold); margin:0 0 4px; text-shadow:2px 2px 0 #6b3d00; }
   .overlay p{ font-size:9px; line-height:1.8; color:#cfc2e8; margin:0; max-width:400px;}
   .btn{
@@ -87,17 +89,18 @@
   #legend b{ color:var(--gold); }
   #legend .key{ display:inline-block; background:#1c1229; border:1px solid #4b3670; border-radius:3px; padding:1px 5px; margin:0 1px; }
   .power-legend{ display:flex; align-items:center; gap:5px; }
-  .swatch{width:10px;height:10px; border-radius:2px; display:inline-block; flex-shrink:0;}
+  .swatch{width:15px;height:15px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; font-size:8px; font-weight:bold; color:#1a1a1a; text-shadow:none;}
   .item-cols{ display:flex; gap:16px; }
   #topBtns{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; justify-content:center; }
   #topBtns .btn{ font-size:9px; padding:9px 12px; }
 
-  .size-row{ display:flex; gap:10px; margin-bottom:4px; }
+  .size-row{ display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; justify-content:center; }
   .size-btn{
     font-family:'Press Start 2P', monospace; font-size:9px; padding:8px 12px;
     background:#1c1229; border:2px solid #4b3670; color:#cfc2e8; border-radius:4px; cursor:pointer;
   }
   .size-btn.active{ border-color:var(--gold); color:#fff4d6; background:#2e2043; }
+  .size-btn.dup-warning{ border-color:#ff5a5a; color:#ffd6d6; box-shadow:0 0 0 1px #ff5a5a inset; }
 
   .section-label{ font-size:8px; color:#a693d1; letter-spacing:1px; margin:10px 0 2px; }
   .skin-row{ display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; justify-content:center; }
@@ -127,9 +130,11 @@
   /* 모바일 터치 컨트롤 */
   #touchControls{ display:none; position:absolute; inset:0; pointer-events:none; z-index:5; }
   @media (pointer: coarse){ #touchControls{ display:block; } }
-  .tpad{ position:absolute; bottom:2%; width:24%; max-width:118px; aspect-ratio:1/1; pointer-events:auto; }
-  .tpad.p1{ left:2%; }
-  .tpad.p2{ right:2%; }
+  .tpad{
+    position:absolute; left:14%; top:86%; transform:translate(-50%,-50%);
+    width:calc(24% * var(--touch-scale)); max-width:calc(118px * var(--touch-scale)); aspect-ratio:1/1; pointer-events:auto;
+    touch-action:none;
+  }
   .tbtn{
     position:absolute; width:32%; height:32%; border-radius:8px;
     background:rgba(255,255,255,0.14); border:2px solid rgba(255,255,255,0.35);
@@ -142,14 +147,31 @@
   .tbtn.left{ top:34%; left:0; }
   .tbtn.right{ top:34%; left:68%; }
   .tbombbtn{
-    position:absolute; bottom:2%; width:12%; max-width:56px; aspect-ratio:1/1; border-radius:50%;
+    position:absolute; left:38%; top:86%; transform:translate(-50%,-50%);
+    width:calc(12% * var(--touch-scale)); max-width:calc(56px * var(--touch-scale)); aspect-ratio:1/1; border-radius:50%;
     background:rgba(255,80,50,0.35); border:2px solid rgba(255,140,60,0.8);
     display:flex; align-items:center; justify-content:center; font-size:22px;
-    pointer-events:auto; user-select:none;
+    pointer-events:auto; user-select:none; touch-action:none;
   }
-  .tbombbtn.p1{ left:calc(2% + 24% + 2%); }
-  .tbombbtn.p2{ right:calc(2% + 24% + 2%); }
   .tbombbtn:active, .tbombbtn.pressed{ background:rgba(255,120,60,0.6); }
+  .tpad.dragging, .tbombbtn.dragging{ outline:3px dashed var(--gold); outline-offset:3px; }
+  #touchPositionModeUI{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+  }
+  #touchPositionModeUI p{ font-size:9px; line-height:1.8; color:#cfc2e8; margin:0; max-width:320px; }
+  #touchSettingsMain{
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  #touchGearBtn{
+    position:absolute; top:8px; right:8px; width:30px; height:30px; border-radius:50%;
+    background:rgba(20,12,32,0.55); border:2px solid rgba(255,255,255,0.4);
+    display:flex; align-items:center; justify-content:center; font-size:15px; color:#fff;
+    pointer-events:auto; user-select:none; z-index:6;
+  }
+  #touchGearBtn:active{ background:rgba(255,204,51,0.4); }
+  .touch-slider-row{ display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; max-width:300px; }
+  .touch-slider-row label{ font-size:9px; color:#cfc2e8; display:flex; justify-content:space-between; width:100%; }
+  .touch-slider-row input[type=range]{ width:100%; }
   .map-card.active-map{ border-color: var(--gold); box-shadow:0 0 0 2px var(--gold) inset; }
   #roomCodeDisplay{ font-size:16px; }
   .join-row{ display:flex; gap:8px; align-items:center; justify-content:center; margin-top:14px; }
@@ -167,14 +189,24 @@
 
   <div id="stage">
     <div id="hud">
-      <div class="hud-box p1">
-        <div class="hud-name"><span class="dot"></span>PLAYER 1</div>
+      <div class="hud-box p1" id="p1Box">
+        <div class="hud-name"><span class="dot" id="p1Dot"></span>PLAYER 1</div>
         <div id="p1-stats">BOMB 1  RANGE 1  SPD 0</div>
       </div>
       <div class="hud-mid" id="hudMid">모드를 선택하세요</div>
       <div class="hud-box p2" id="p2Box">
-        <div class="hud-name"><span class="dot"></span><span id="p2Label">ENEMIES</span></div>
+        <div class="hud-name"><span class="dot" id="p2Dot"></span><span id="p2Label">ENEMIES</span></div>
         <div id="p2-stats">남은 적 0</div>
+      </div>
+    </div>
+    <div id="hudExtraRow" class="hidden" style="display:flex; gap:12px; justify-content:center; margin-bottom:10px;">
+      <div class="hud-box hidden" id="p3Box">
+        <div class="hud-name"><span class="dot" id="p3Dot"></span><span>PLAYER 3</span></div>
+        <div id="p3-stats">BOMB 1  RANGE 1  SPD 0</div>
+      </div>
+      <div class="hud-box hidden" id="p4Box">
+        <div class="hud-name"><span class="dot" id="p4Dot"></span><span>PLAYER 4</span></div>
+        <div id="p4-stats">BOMB 1  RANGE 1  SPD 0</div>
       </div>
     </div>
 
@@ -182,6 +214,7 @@
       <canvas id="gameCanvas" width="520" height="440"></canvas>
 
       <div id="touchControls">
+        <div id="touchGearBtn">⚙</div>
         <div class="tpad p1">
           <div class="tbtn up" data-key="KeyW">▲</div>
           <div class="tbtn down" data-key="KeyS">▼</div>
@@ -198,6 +231,29 @@
         <div class="tbombbtn p2" id="tbomb2">💣</div>
       </div>
 
+      <div class="overlay hidden" id="touchSettingsScreen">
+        <div id="touchSettingsMain">
+          <h2>터치 컨트롤 설정</h2>
+          <p>손 크기나 그립에 맞게 가상 패드 크기를 조절하고, 위치는 직접 끌어서 원하는 자리에 놓으세요.<br>화면 오른쪽 위 ⚙ 버튼으로 언제든 다시 열 수 있어요.</p>
+          <div class="touch-slider-row">
+            <label>패드 크기 <span id="touchScaleVal">100%</span></label>
+            <input type="range" id="touchScaleRange" min="70" max="160" value="100">
+          </div>
+          <div class="mode-row" style="margin-top:10px;">
+            <button class="btn" id="btnStartPositioning">위치 직접 옮기기</button>
+          </div>
+          <div class="mode-row" style="margin-top:4px;">
+            <button class="btn secondary small" id="btnResetTouch">기본값으로 초기화</button>
+            <button class="btn secondary small" id="btnCloseTouchSettings">닫기</button>
+          </div>
+        </div>
+        <div id="touchPositionModeUI" class="hidden">
+          <h2>위치 조정 중</h2>
+          <p>패드와 폭탄 버튼을 손가락으로 눌러 원하는 위치까지 끌어보세요. 다 옮겼으면 완료를 눌러주세요.</p>
+          <button class="btn" id="btnFinishPositioning">완료</button>
+        </div>
+      </div>
+
       <div class="overlay" id="startScreen">
         <svg class="bomb-spin" viewBox="0 0 40 40">
           <circle cx="20" cy="24" r="13" fill="#1c1c1c" stroke="#000" stroke-width="2"/>
@@ -207,12 +263,25 @@
         </svg>
         <h2>모드를 선택하세요</h2>
         <p>미로를 돌아다니며 폭탄으로 벽을 부수고 상대를 쓰러뜨리세요!<br>부서진 벽에서 가끔 아이템이 나옵니다.</p>
+        <div id="startExplain" style="font-size:9px; line-height:1.9; color:#cfc2e8; max-width:420px; text-align:left; background:rgba(255,255,255,0.04); border:1px solid #4b3670; border-radius:6px; padding:12px 16px;">
+          <p style="margin:0 0 6px; color:var(--gold); font-size:10px;"><b>📖 게임 방법</b></p>
+          <p style="margin:0 0 4px;">🎯 목표: 폭탄으로 미로 벽을 부수며 상대(또는 AI)를 모두 제거하세요.</p>
+          <p style="margin:0 0 4px;">🎮 조작 (1P): 이동 <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> &nbsp;폭탄 <span class="key">SPACE</span></p>
+          <p style="margin:0 0 4px;">🎮 조작 (2P): 이동 <span class="key">방향키</span> &nbsp;폭탄 <span class="key">ENTER</span></p>
+          <p style="margin:0 0 4px;">💡 자신이 설치한 폭탄에도 맞으면 목숨이 줄어드니 주의하세요!</p>
+          <p style="margin:0;">✨ 부서진 벽에서 나오는 아이템으로 폭탄 개수·범위·속도·생명·차기·관통·보호막을 얻을 수 있어요.</p>
+        </div>
         <p id="bestStageText" style="font-size:11px; color:var(--gold); display:none;"></p>
         <div class="mode-row">
           <button class="btn" id="btn1p">1인용<br>VS AI</button>
           <button class="btn" id="btn2p">2인용<br>로컬 대전</button>
           <button class="btn secondary" id="btnOnline">온라인 대전<br>(베타)</button>
         </div>
+        <div class="mode-row" style="margin-top:14px;">
+          <button class="btn secondary small" id="btnKeyConfig">🎮 조작 설정</button>
+          <button class="btn secondary small" id="btnColorblind">🎨 색약 모드: OFF</button>
+        </div>
+        <p style="margin-top:10px; font-size:8px; letter-spacing:1px; color:#6b5a94;">made by m00n</p>
       </div>
 
       <div class="overlay hidden" id="onlineScreen">
@@ -232,10 +301,14 @@
           <p>방 코드: <b id="roomCodeDisplay" style="color:var(--gold); letter-spacing:3px;"></b> <button class="btn secondary small" id="btnCopyRoomCode" style="padding:2px 8px; font-size:11px;">복사</button></p>
           <p id="onlineStatusText" style="font-size:9px; color:#cfc2e8;">상대방을 기다리는 중...</p>
           <div id="onlineHostOptions" class="hidden">
+            <div class="section-label">최대 인원</div>
+            <div class="size-row" id="onlineCountRow"></div>
             <div class="section-label">맵 크기</div>
             <div class="size-row" id="onlineSizeRow"></div>
             <div class="map-grid" id="onlineMapGrid"></div>
           </div>
+          <div class="section-label">참가자</div>
+          <div id="onlineRoster" style="display:flex; flex-direction:column; gap:6px; align-items:flex-start; margin-bottom:6px;"></div>
           <div class="section-label">내 캐릭터 스킨</div>
           <div id="onlineSkinRowWrap"></div>
           <div class="mode-row" style="margin-top:10px;">
@@ -253,6 +326,7 @@
         <div class="size-row" id="sizeRow"></div>
         <div class="section-label" id="diffLabel">AI 난이도</div>
         <div class="size-row" id="diffRow"></div>
+        <p id="diffBestText" style="font-size:9px; color:var(--gold); margin:0 0 4px;"></p>
         <div class="section-label" id="stageLabel">시작 스테이지</div>
         <div class="size-row" id="stageRow"></div>
         <div class="section-label">캐릭터 스킨</div>
@@ -272,6 +346,11 @@
       <div class="overlay hidden" id="overScreen">
         <h2 id="overTitle">게임 종료</h2>
         <p id="overDesc"></p>
+        <div id="overStats" style="font-size:9px; line-height:2.1; color:#cfc2e8; background:rgba(255,255,255,0.04); border:1px solid #4b3670; border-radius:6px; padding:10px 16px;"></div>
+        <div class="mode-row" style="margin-top:2px;">
+          <button class="btn secondary small" id="btnSaveResultImg">🖼 결과 이미지 저장</button>
+          <button class="btn secondary small" id="btnCopyResultText">📋 결과 복사</button>
+        </div>
         <div class="mode-row">
           <button class="btn" id="btnRetry">다시하기</button>
           <button class="btn" id="btnRematch">재대결</button>
@@ -279,18 +358,44 @@
         </div>
       </div>
 
+      <div class="overlay hidden" id="keyConfigScreen">
+        <h2>조작 설정</h2>
+        <p>바꾸고 싶은 항목을 클릭한 뒤, 원하는 키를 눌러주세요.<br>(ESC로 입력 취소)</p>
+        <div class="skin-groups" id="keyConfigBody"></div>
+        <p id="keyConfigWarning" class="hidden" style="color:#ff8a8a; font-size:9px; line-height:1.7; max-width:420px; background:rgba(255,90,90,0.1); border:1px solid #a33; border-radius:6px; padding:8px 12px; margin-top:12px;"></p>
+        <div class="mode-row" style="margin-top:14px;">
+          <button class="btn secondary small" id="btnResetKeys">기본값으로 초기화</button>
+          <button class="btn secondary small" id="btnBackFromKeys">뒤로</button>
+        </div>
+      </div>
+
       <div class="overlay hidden" id="pauseScreen">
         <h2>일시정지</h2>
         <div class="mode-row">
           <button class="btn" id="btnResume">계속하기</button>
+          <button class="btn secondary" id="btnPauseKeyConfig">🎮 조작 설정</button>
           <button class="btn secondary" id="btnPauseMenu">메뉴로</button>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="confirmScreen" style="z-index:10;">
+        <h2 id="confirmTitle">확인</h2>
+        <p id="confirmDesc"></p>
+        <div class="mode-row">
+          <button class="btn" id="btnConfirmYes">확인</button>
+          <button class="btn secondary" id="btnConfirmNo">취소</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div id="reconnectBanner" class="hidden" style="position:fixed; top:8px; left:50%; transform:translateX(-50%); background:rgba(40,10,50,0.92); border:2px solid var(--gold); border-radius:8px; padding:8px 16px; font-size:12px; color:#fff4d6; z-index:50;">
-    상대방과 연결이 잠시 끊겼습니다. 재연결 대기 중... (<span id="reconnectCountdown">8</span>초)
+  <div id="reconnectBanner" class="hidden" style="position:fixed; top:8px; left:50%; transform:translateX(-50%); background:rgba(40,10,50,0.92); border:2px solid var(--gold); border-radius:8px; padding:10px 16px; font-size:12px; color:#fff4d6; z-index:50; text-align:center;">
+    <div id="reconnectMsg">상대방과 연결이 잠시 끊겼습니다. 재연결 대기 중... (<span id="reconnectCountdown">8</span>초)</div>
+    <button class="btn secondary" id="btnManualReconnect" style="margin-top:6px; font-size:10px; padding:6px 10px;">지금 재연결 시도</button>
+  </div>
+
+  <div id="pingBadge" class="hidden" style="position:fixed; top:8px; right:8px; background:rgba(20,10,30,0.85); border:2px solid #3a2a54; border-radius:6px; padding:5px 9px; font-size:9px; color:#d8c9f0; z-index:49; letter-spacing:1px;">
+    핑 <span id="pingValue">--</span>ms
   </div>
 
   <div id="legend">
@@ -308,15 +413,15 @@
       <b>아이템</b>
       <div class="item-cols">
         <div>
-          <div class="power-legend"><span class="swatch" style="background:#ff8a3d;"></span>폭탄 +1</div>
-          <div class="power-legend"><span class="swatch" style="background:#ff4d4d;"></span>범위 +1</div>
-          <div class="power-legend"><span class="swatch" style="background:#4dd2ff;"></span>속도 +1</div>
-          <div class="power-legend"><span class="swatch" style="background:#4dff88;"></span>생명 +1</div>
+          <div class="power-legend"><span class="swatch" data-pu="bomb">B</span>폭탄 +1</div>
+          <div class="power-legend"><span class="swatch" data-pu="range">F</span>범위 +1</div>
+          <div class="power-legend"><span class="swatch" data-pu="speed">S</span>속도 +1</div>
+          <div class="power-legend"><span class="swatch" data-pu="life">♥</span>생명 +1</div>
         </div>
         <div>
-          <div class="power-legend"><span class="swatch" style="background:#b980ff;"></span>폭탄 차기</div>
-          <div class="power-legend"><span class="swatch" style="background:#ffe066;"></span>관통 폭발</div>
-          <div class="power-legend"><span class="swatch" style="background:#cfd8ff;"></span>보호막(1회)</div>
+          <div class="power-legend"><span class="swatch" data-pu="kick">K</span>폭탄 차기</div>
+          <div class="power-legend"><span class="swatch" data-pu="pierce">P</span>관통 폭발</div>
+          <div class="power-legend"><span class="swatch" data-pu="shield">D</span>보호막(1회)</div>
         </div>
       </div>
     </div>
@@ -325,8 +430,15 @@
   <div id="topBtns">
     <button class="btn secondary" id="btnRestartTop">처음부터</button>
     <button class="btn secondary" id="btnPauseToggle">⏸ 일시정지</button>
-    <button class="btn secondary" id="btnMusicToggle">🔊 음악 ON</button>
-    <button class="btn secondary" id="btnSfxToggle">🔔 효과음 ON</button>
+    <div class="btn secondary" id="musicVolWrap" style="display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:default;">
+      <span id="musicIcon" style="font-size:11px;">🎵</span>
+      <input type="range" id="musicVolSlider" min="0" max="100" value="55" style="width:70px; accent-color:#ffcc33; cursor:pointer;">
+    </div>
+    <div class="btn secondary" id="sfxVolWrap" style="display:flex; align-items:center; gap:8px; padding:9px 12px; cursor:default;">
+      <span id="sfxIcon" style="font-size:11px;">🔔</span>
+      <input type="range" id="sfxVolSlider" min="0" max="100" value="70" style="width:70px; accent-color:#ffcc33; cursor:pointer;">
+    </div>
+    <button class="btn secondary" id="btnFullscreen">⛶ 전체화면</button>
   </div>
 </div>
 
@@ -380,8 +492,8 @@
         const ref = fbDb.ref(roomPath(roomCode,'players/p1'));
         ref.update({connected:true, skin:onlineSkin});
         ref.onDisconnect().update({connected:false});
-      } else if(onlineRole==='guest'){
-        const ref = fbDb.ref(roomPath(roomCode,'players/p2'));
+      } else if(onlineRole==='guest' && onlineMySlot){
+        const ref = fbDb.ref(roomPath(roomCode,'players/p'+onlineMySlot));
         ref.update({connected:true, skin:onlineSkin});
         ref.onDisconnect().update({connected:false});
       }
@@ -397,13 +509,22 @@
   let selectedSizeKey = 'medium';
 
   // ---------- 난이도 프리셋 ----------
+  // lookAheadTiles: 진행 방향으로 몇 칸 앞의 폭발 위험까지 미리 감지해 피하는지 (0=위험 지역에 실제로 들어가야 반응)
+  // reactMs: 방향을 다시 고민하기까지 걸리는 기본 시간(ms) - 낮을수록 더 기민하게 움직임
+  // smartChaseDepth: 플레이어를 추격할 때 벽을 고려한 BFS 경로탐색을 몇 칸 깊이까지 수행하는지 (0=단순 직선거리 비교만 사용)
+  // smartEscapeDepth: 위험 지역 탈출 시 안전한 칸까지 BFS로 경로를 찾는 탐색 깊이 (0=바로 옆 칸만 보고 반응)
+  // aggroTiles: 목표(플레이어)와의 거리가 이 칸 수 이내로 좁혀지면, chaseChance 확률과 무관하게 무조건 추격 모드로 전환한다 (0=효과 없음)
+  // predictSteps: 추격 시 상대의 "현재 위치"가 아니라 상대가 이동 중인 방향으로 이만큼 앞선 칸을 목표로 삼아 앞을 가로막듯 움직인다 (0=현재 위치만 추격)
   const DIFFICULTY_PRESETS = {
-    easy:   { label:'쉬움', enemyCountBase:2, enemyCountPerStage:0.6, enemyCountMax:8,  spdBonusPerStage:2.5, spdBonusMax:26, chaseChance:0.12, softWallBase:0.56 },
-    normal: { label:'보통', enemyCountBase:3, enemyCountPerStage:1.0, enemyCountMax:10, spdBonusPerStage:4,   spdBonusMax:60, chaseChance:0.32, softWallBase:0.62 },
-    hard:   { label:'어려움', enemyCountBase:4, enemyCountPerStage:1.4, enemyCountMax:13, spdBonusPerStage:6.5, spdBonusMax:105, chaseChance:0.6, softWallBase:0.66 },
+    veryEasy: { label:'매우 쉬움', enemyCountBase:1, enemyCountPerStage:0.4, enemyCountMax:5,  spdBonusPerStage:1.5, spdBonusMax:15,  chaseChance:0.05, softWallBase:0.50, lookAheadTiles:0, reactMs:900, smartChaseDepth:0,  smartEscapeDepth:0,  aggroTiles:0, predictSteps:0 },
+    easy:   { label:'쉬움', enemyCountBase:2, enemyCountPerStage:0.6, enemyCountMax:8,  spdBonusPerStage:2.5, spdBonusMax:26, chaseChance:0.12, softWallBase:0.56, lookAheadTiles:0, reactMs:750, smartChaseDepth:0,  smartEscapeDepth:4,  aggroTiles:0, predictSteps:0 },
+    normal: { label:'보통', enemyCountBase:3, enemyCountPerStage:1.0, enemyCountMax:10, spdBonusPerStage:4,   spdBonusMax:60, chaseChance:0.32, softWallBase:0.62, lookAheadTiles:1, reactMs:600, smartChaseDepth:6,  smartEscapeDepth:6,  aggroTiles:3, predictSteps:0 },
+    hard:   { label:'어려움', enemyCountBase:4, enemyCountPerStage:1.4, enemyCountMax:13, spdBonusPerStage:6.5, spdBonusMax:105, chaseChance:0.6, softWallBase:0.66, lookAheadTiles:2, reactMs:400, smartChaseDepth:10, smartEscapeDepth:10, aggroTiles:5, predictSteps:1 },
+    veryHard: { label:'매우 어려움', enemyCountBase:5, enemyCountPerStage:1.8, enemyCountMax:16, spdBonusPerStage:8.5, spdBonusMax:140, chaseChance:0.85, softWallBase:0.70, lookAheadTiles:3, reactMs:250, smartChaseDepth:16, smartEscapeDepth:14, aggroTiles:7, predictSteps:2 },
   };
   let selectedDifficulty = 'normal';
   let currentDifficulty = DIFFICULTY_PRESETS.normal;
+  let currentDifficultyKey = 'normal';
 
   // ---------- 시작 스테이지 ----------
   const STAGE_START_OPTIONS = [1,3,5,7,10];
@@ -426,7 +547,7 @@
   let onlineMode = false;
   let onlineRole = null; // 'host' | 'guest'
   let roomCode = null;
-  let guestConnected = false;
+  let guestConnected = false; // 2인 대전 기준 게스트(슬롯2) 접속 여부 - 재접속 유예 로직에서만 사용
   let onlineSelectedSizeKey = 'medium';
   let onlineSelectedThemeIdx = 0;
   let onlineSkin = 'blue';
@@ -434,8 +555,15 @@
   let guestInputTimer = null;
   let lastSentInput = null;
   let localBombSeq = 0;
-  let lastAppliedBombSeq = 0;
-  let remoteInput = {up:false,down:false,left:false,right:false};
+  // ---------- 3~4인 온라인 대전용 다중 슬롯 상태 ----------
+  let onlineMaxPlayers = 2; // 방장이 고를 수 있는 최대 인원(2~4)
+  let onlineMySlot = null;  // 게스트 자신이 배정받은 슬롯 번호(2/3/4), 호스트는 항상 1
+  let guestConnectedSlots = {2:false,3:false,4:false};
+  let remoteSkins = {2:'pink', 3:'green', 4:'purple'};
+  let remoteInputs = {2:{up:false,down:false,left:false,right:false}, 3:{up:false,down:false,left:false,right:false}, 4:{up:false,down:false,left:false,right:false}};
+  let lastAppliedBombSeq = {2:0, 3:0, 4:0};
+  let rosterCache = {}; // {slot:{connected,skin}} - 로비 참가자 목록 표시용, 양쪽 역할 공통 사용
+  let remoteInput = {up:false,down:false,left:false,right:false}; // (구버전 호환용, 더는 사용 안 함)
   let lastOverTitle = '', lastOverDesc = '';
   // 게스트 화면 부드러운 보간(interpolation)용 상태
   let guestPrevPlayers = null;
@@ -450,6 +578,10 @@
   let guestGraceTimer = null;
   let hostGraceTimerForGuestView = null;
   let hostConnectedForGuestView = true;
+  // 핑(왕복 지연시간) 측정용
+  let pingIntervalTimer = null;
+  let currentPingMs = null;
+  let manualReconnectBusy = false;
 
   function genRoomCode(){
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -463,16 +595,23 @@
     if(!ensureFirebase()) return;
     roomCode = genRoomCode();
     onlineRole = 'host';
+    onlineMySlot = 1;
     guestConnected = false;
+    guestConnectedSlots = {2:false,3:false,4:false};
+    remoteSkins = {2:'pink', 3:'green', 4:'purple'};
+    rosterCache = {};
     const ref = fbDb.ref(roomPath(roomCode));
     ref.set({
       status:'waiting',
       createdAt: Date.now(),
-      players:{ p1:{skin:onlineSkin, connected:true}, p2:null },
+      maxPlayers: onlineMaxPlayers,
+      players:{ p1:{skin:onlineSkin, connected:true}, p2:null, p3:null, p4:null },
     }).then(()=>{
       // 방 전체를 즉시 지우지 않고, 내 접속 상태만 표시 (순간적인 와이파이 끊김에도 방이 바로 사라지지 않도록)
       fbDb.ref(roomPath(roomCode,'players/p1')).onDisconnect().update({connected:false});
       attachHostListeners(roomCode);
+      attachRosterListener(roomCode);
+      attachMaxPlayersListener(roomCode);
       showOnlineLobbyUI();
     }).catch(e=>{ console.error(e); alert('방 생성 실패: '+e.message); });
   }
@@ -486,18 +625,26 @@
       if(!snap.exists()){ alert('존재하지 않는 방입니다.'); return; }
       const data = snap.val();
       if(data.status !== 'waiting'){ alert('이미 게임이 시작되었거나 종료된 방입니다.'); return; }
-      // 이미 다른 사람이 게스트로 접속해 있는 방이면 덮어쓰지 않고 막는다.
-      if(data.players && data.players.p2 && data.players.p2.connected){
-        alert('이미 다른 사람이 입장해 있는 방입니다.');
-        return;
+      const maxP = data.maxPlayers || 2;
+      // 아직 아무도 없는(또는 끊긴) 가장 빠른 슬롯을 찾아 배정한다.
+      let targetSlot = null;
+      for(let s=2;s<=maxP;s++){
+        const d = data.players && data.players['p'+s];
+        if(!d || !d.connected){ targetSlot = s; break; }
       }
+      if(!targetSlot){ alert('방 인원이 가득 찼습니다.'); return; }
       roomCode = code;
       onlineRole = 'guest';
+      onlineMySlot = targetSlot;
+      onlineMaxPlayers = maxP;
+      rosterCache = {};
       hostConnectedForGuestView = true;
-      const p2Ref = fbDb.ref(roomPath(code,'players/p2'));
-      p2Ref.set({skin:onlineSkin, connected:true});
-      p2Ref.onDisconnect().update({connected:false});
+      const myRef = fbDb.ref(roomPath(code,'players/p'+targetSlot));
+      myRef.set({skin:onlineSkin, connected:true});
+      myRef.onDisconnect().update({connected:false});
       attachGuestListeners(code);
+      attachRosterListener(code);
+      attachMaxPlayersListener(code);
       showOnlineLobbyUI();
     }).catch(e=>{ console.error(e); alert('입장 실패: '+e.message); });
   }
@@ -505,6 +652,7 @@
   let reconnectBannerInterval = null;
   function showReconnectBanner(){
     const banner = document.getElementById('reconnectBanner');
+    resetReconnectMsgHtml();
     const countdownEl = document.getElementById('reconnectCountdown');
     banner.classList.remove('hidden');
     let remaining = Math.ceil(RECONNECT_GRACE_MS/1000);
@@ -512,7 +660,8 @@
     if(reconnectBannerInterval) clearInterval(reconnectBannerInterval);
     reconnectBannerInterval = setInterval(()=>{
       remaining -= 1;
-      countdownEl.textContent = Math.max(0, remaining);
+      const el = document.getElementById('reconnectCountdown');
+      if(el) el.textContent = Math.max(0, remaining);
       if(remaining<=0){ clearInterval(reconnectBannerInterval); reconnectBannerInterval=null; }
     }, 1000);
   }
@@ -547,50 +696,172 @@
     if(hostGraceTimerForGuestView){ clearTimeout(hostGraceTimerForGuestView); hostGraceTimerForGuestView=null; hideReconnectBanner(); }
   }
 
-  function attachHostListeners(code){
-    fbDb.ref(roomPath(code,'players/p2')).on('value', snap=>{
-      const val = snap.val();
-      const wasConnected = guestConnected;
-      guestConnected = !!(val && val.connected);
-      if(val && val.skin){ guestSkinFromHost = val.skin; }
-      updateOnlineLobbyStatus();
-      if(wasConnected && !guestConnected && onlineMode && gameState==='playing'){
-        startGuestDisconnectGraceTimer();
-      } else if(guestConnected && !wasConnected){
-        cancelGuestDisconnectGraceTimer();
+  // ---------- 핑(왕복 지연시간) 측정 ----------
+  // 서로 상대방이 보낸 타임스탬프를 그대로 되돌려주는(echo) 방식으로, 클라이언트 시계가 서로 달라도
+  // 정확한 왕복시간(RTT)을 잴 수 있다.
+  function startPingMonitor(){
+    if(!fbDb || !roomCode || !onlineRole) return;
+    if(onlineRole==='host'){
+      // 호스트는 상대가 여럿일 수 있어 하나의 숫자로 표시하지 않고, 각 게스트의 ping을 그대로 되돌려주기만 한다.
+      document.getElementById('pingBadge').classList.add('hidden');
+      for(let s=2;s<=4;s++){
+        fbDb.ref(roomPath(roomCode,'ping/p'+s)).on('value', snap=>{
+          const v = snap.val();
+          if(v==null || !fbDb || !roomCode) return;
+          fbDb.ref(roomPath(roomCode,'pingEcho/p'+s)).set(v);
+        });
       }
+      return;
+    }
+    const myRole = 'p'+onlineMySlot;
+    document.getElementById('pingBadge').classList.remove('hidden');
+    // 내가 보낸 ping이 돌아오면 왕복시간을 계산한다
+    fbDb.ref(roomPath(roomCode,'pingEcho/'+myRole)).on('value', snap=>{
+      const v = snap.val();
+      if(v==null) return;
+      const rtt = Date.now() - v;
+      if(rtt>=0 && rtt<20000){ currentPingMs = rtt; updatePingDisplay(); }
     });
-    fbDb.ref(roomPath(code,'input/p2')).on('value', snap=>{
-      const val = snap.val();
-      if(!val) return;
-      remoteInput.up = !!val.up; remoteInput.down = !!val.down;
-      remoteInput.left = !!val.left; remoteInput.right = !!val.right;
-      const seq = val.bombSeq||0;
-      if(seq !== lastAppliedBombSeq){
-        lastAppliedBombSeq = seq;
-        if(players[1]) tryPlaceBomb(players[1]);
+    if(pingIntervalTimer) clearInterval(pingIntervalTimer);
+    const sendPing = ()=>{ if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'ping/'+myRole)).set(Date.now()); };
+    sendPing();
+    pingIntervalTimer = setInterval(sendPing, 2000);
+  }
+  function stopPingMonitor(){
+    if(pingIntervalTimer){ clearInterval(pingIntervalTimer); pingIntervalTimer=null; }
+    currentPingMs = null;
+    document.getElementById('pingBadge').classList.add('hidden');
+    try{
+      if(fbDb && roomCode){
+        for(let s=2;s<=4;s++){
+          fbDb.ref(roomPath(roomCode,'ping/p'+s)).off();
+          fbDb.ref(roomPath(roomCode,'pingEcho/p'+s)).off();
+        }
       }
+    }catch(e){}
+  }
+  function updatePingDisplay(){
+    const el = document.getElementById('pingValue');
+    if(!el) return;
+    if(currentPingMs==null){ el.textContent = '--'; return; }
+    el.textContent = Math.round(currentPingMs);
+    const badge = document.getElementById('pingBadge');
+    // 지연 정도에 따라 색으로도 한눈에 보이게
+    if(currentPingMs < 120) badge.style.borderColor = '#3ecf6a';
+    else if(currentPingMs < 300) badge.style.borderColor = '#ffcc33';
+    else badge.style.borderColor = '#ff5577';
+  }
+
+  // ---------- 재접속 수동 재시도 ----------
+  // 실시간 리스너가 순간적으로 갱신을 놓쳤을 수 있으므로, 버튼을 누르면 상대방의 접속 상태를
+  // 캐시된 값이 아니라 즉시 서버에서 다시 읽어와 확인한다.
+  function manualReconnectAttempt(){
+    if(manualReconnectBusy || !fbDb || !roomCode || !onlineRole) return;
+    manualReconnectBusy = true;
+    const btn = document.getElementById('btnManualReconnect');
+    const msgEl = document.getElementById('reconnectMsg');
+    if(btn) btn.disabled = true;
+    if(msgEl) msgEl.textContent = '재연결 확인 중...';
+    const peerPath = onlineRole==='host' ? 'players/p2' : 'players/p1';
+    fbDb.ref(roomPath(roomCode, peerPath)).get().then(snap=>{
+      const val = snap.val();
+      const connected = !!(val && val.connected);
+      if(connected){
+        if(onlineRole==='host'){ guestConnected = true; cancelGuestDisconnectGraceTimer(); }
+        else { hostConnectedForGuestView = true; cancelHostDisconnectGraceTimer(); }
+      } else if(msgEl){
+        const label = onlineRole==='host' ? '상대방' : '호스트';
+        msgEl.textContent = `아직 ${label}과 연결되지 않았습니다. 잠시 후 다시 시도해보세요.`;
+        setTimeout(()=>{
+          if(!document.getElementById('reconnectBanner').classList.contains('hidden')){
+            resetReconnectMsgHtml();
+          }
+        }, 2000);
+      }
+    }).catch(e=>{ console.error(e); if(msgEl) msgEl.textContent = '확인 실패. 네트워크를 확인해주세요.'; })
+    .finally(()=>{
+      manualReconnectBusy = false;
+      if(btn) btn.disabled = false;
+    });
+  }
+  function resetReconnectMsgHtml(){
+    const msgEl = document.getElementById('reconnectMsg');
+    if(msgEl) msgEl.innerHTML = '상대방과 연결이 잠시 끊겼습니다. 재연결 대기 중... (<span id="reconnectCountdown">8</span>초)';
+  }
+
+  function attachHostListeners(code){
+    startPingMonitor();
+    for(let s=2;s<=4;s++){
+      fbDb.ref(roomPath(code,'input/p'+s)).on('value', snap=>{
+        const val = snap.val();
+        if(!val) return;
+        const ri = remoteInputs[s];
+        ri.up = !!val.up; ri.down = !!val.down;
+        ri.left = !!val.left; ri.right = !!val.right;
+        const seq = val.bombSeq||0;
+        if(seq !== lastAppliedBombSeq[s]){
+          lastAppliedBombSeq[s] = seq;
+          const p = players.find(pp=>pp.id===s-1);
+          if(p) tryPlaceBomb(p);
+        }
+      });
+    }
+  }
+
+  // 로비/게임 중 참가자 명단(접속 여부·스킨)을 한 번에 추적. 호스트/게스트 공통으로 사용.
+  function attachRosterListener(code){
+    fbDb.ref(roomPath(code,'players')).on('value', snap=>{
+      const val = snap.val() || {};
+      for(let s=1;s<=4;s++){
+        const d = val['p'+s];
+        rosterCache[s] = d ? {connected:!!d.connected, skin:d.skin||null} : {connected:false, skin:null};
+      }
+      if(onlineRole==='host'){
+        for(let s=2;s<=4;s++){
+          guestConnectedSlots[s] = rosterCache[s].connected;
+          if(rosterCache[s].skin) remoteSkins[s] = rosterCache[s].skin;
+        }
+        // 기존 1:1(2인) 대전의 재접속 유예 로직은 슬롯2 기준으로 그대로 유지
+        const wasConnected = guestConnected;
+        guestConnected = !!rosterCache[2].connected;
+        if(onlineMaxPlayers===2){
+          if(wasConnected && !guestConnected && onlineMode && gameState==='playing'){
+            startGuestDisconnectGraceTimer();
+          } else if(guestConnected && !wasConnected){
+            cancelGuestDisconnectGraceTimer();
+          }
+        }
+      } else if(onlineRole==='guest'){
+        const wasConnected = hostConnectedForGuestView;
+        const nowConnected = !!(rosterCache[1] && rosterCache[1].connected);
+        if(wasConnected && !nowConnected && onlineMode && gameState==='playing'){
+          startHostDisconnectGraceTimer();
+        } else if(nowConnected && !wasConnected){
+          cancelHostDisconnectGraceTimer();
+        }
+        hostConnectedForGuestView = nowConnected;
+      }
+      updateOnlineLobbyStatus();
+      renderOnlineRoster();
+    });
+  }
+  function attachMaxPlayersListener(code){
+    fbDb.ref(roomPath(code,'maxPlayers')).on('value', snap=>{
+      const v = snap.val();
+      if(!v) return;
+      onlineMaxPlayers = v;
+      if(onlineRole==='host') renderOnlinePlayerCountRow();
+      updateOnlineLobbyStatus();
+      renderOnlineRoster();
     });
   }
 
-  let guestSkinFromHost = 'pink';
   function attachGuestListeners(code){
+    startPingMonitor();
     fbDb.ref(roomPath(code,'status')).on('value', snap=>{
       const st = snap.val();
       if(st==null){ alert('호스트가 방을 나갔습니다.'); leaveOnlineRoom(); return; }
       if(st==='playing' && gameState!=='playing'){ enterOnlineGuestPlayingUI(); }
-    });
-    fbDb.ref(roomPath(code,'players/p1')).on('value', snap=>{
-      const val = snap.val();
-      updateOnlineLobbyStatus(val);
-      const wasConnected = hostConnectedForGuestView;
-      const nowConnected = !!(val && val.connected);
-      if(wasConnected && !nowConnected && onlineMode && gameState==='playing'){
-        startHostDisconnectGraceTimer();
-      } else if(nowConnected && !wasConnected){
-        cancelHostDisconnectGraceTimer();
-      }
-      hostConnectedForGuestView = nowConnected;
     });
     fbDb.ref(roomPath(code,'state')).on('value', snap=>{
       const s = snap.val();
@@ -607,24 +878,70 @@
     const hostOptions = document.getElementById('onlineHostOptions');
     if(onlineRole==='host'){
       hostOptions.classList.remove('hidden');
+      renderOnlinePlayerCountRow();
       renderOnlineSizeRow();
       renderOnlineMapGrid();
     } else {
       hostOptions.classList.add('hidden');
     }
     renderOnlineSkinRow();
+    renderOnlineRoster();
     updateOnlineLobbyStatus();
   }
-  function updateOnlineLobbyStatus(hostVal){
+  function slotLabel(s){
+    if(s===1) return 'PLAYER 1' + (onlineRole==='host' ? ' (방장, 나)' : ' (방장)');
+    return 'PLAYER '+s + (onlineRole==='guest' && s===onlineMySlot ? ' (나)' : '');
+  }
+  function renderOnlineRoster(){
+    const wrap = document.getElementById('onlineRoster');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    for(let s=1; s<=onlineMaxPlayers; s++){
+      const d = rosterCache[s] || (s===1 ? {connected:true} : {connected:false});
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:9px; color:#cfc2e8;';
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width:9px; height:9px; border-radius:2px; display:inline-block; background:' + (d.connected ? '#3ecf6e' : '#4b3670') + ';';
+      const label = document.createElement('span');
+      label.textContent = slotLabel(s) + (d.connected ? ' - 접속됨' : ' - 대기중');
+      row.appendChild(dot); row.appendChild(label);
+      wrap.appendChild(row);
+    }
+  }
+  function updateOnlineLobbyStatus(){
     const statusEl = document.getElementById('onlineStatusText');
     const startBtn = document.getElementById('btnStartOnline');
     if(onlineRole==='host'){
-      statusEl.textContent = guestConnected ? '상대방이 접속했습니다! 시작할 수 있어요.' : '상대방을 기다리는 중... (코드를 공유하세요)';
-      startBtn.classList.toggle('hidden', !guestConnected);
+      const connectedGuests = [2,3,4].filter(s=>s<=onlineMaxPlayers && guestConnectedSlots[s]).length;
+      statusEl.textContent = connectedGuests>0
+        ? `${connectedGuests}명이 접속했습니다! 시작할 수 있어요. (최대 ${onlineMaxPlayers}인)`
+        : `상대방을 기다리는 중... (최대 ${onlineMaxPlayers}인, 코드를 공유하세요)`;
+      startBtn.classList.toggle('hidden', connectedGuests===0);
     } else {
       statusEl.textContent = '호스트가 게임을 시작하기를 기다리는 중...';
       startBtn.classList.add('hidden');
     }
+  }
+  function renderOnlinePlayerCountRow(){
+    const row = document.getElementById('onlineCountRow');
+    if(!row) return;
+    row.innerHTML = '';
+    [2,3,4].forEach(n=>{
+      const b = document.createElement('div');
+      b.className = 'size-btn' + (n===onlineMaxPlayers ? ' active' : '');
+      b.textContent = n+'인';
+      b.addEventListener('click', ()=>{
+        // 현재 접속해 있는 인원보다 줄이면 누군가 튕겨나갈 수 있으니 막는다.
+        const connectedCount = 1 + [2,3,4].filter(s=>guestConnectedSlots[s]).length;
+        if(n < connectedCount){ alert('이미 접속한 인원보다 적게는 설정할 수 없습니다.'); return; }
+        onlineMaxPlayers = n;
+        if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'maxPlayers')).set(n);
+        renderOnlinePlayerCountRow();
+        renderOnlineRoster();
+        updateOnlineLobbyStatus();
+      });
+      row.appendChild(b);
+    });
   }
   function renderOnlineSizeRow(){
     const row = document.getElementById('onlineSizeRow');
@@ -640,6 +957,7 @@
   function renderOnlineMapGrid(){
     const grid = document.getElementById('onlineMapGrid');
     grid.innerHTML = '';
+    grid.appendChild(buildRandomMapCard((idx)=>{ onlineSelectedThemeIdx = idx; renderOnlineMapGrid(); }));
     THEMES.forEach((theme, idx)=>{
       const card = document.createElement('div');
       card.className = 'map-card' + (idx===onlineSelectedThemeIdx? ' active-map':'');
@@ -658,29 +976,39 @@
     renderSkinRow(wrap, ()=>onlineSkin, (k)=>{
       onlineSkin = k;
       if(fbDb && roomCode){
-        const slot = onlineRole==='host' ? 'players/p1/skin' : 'players/p2/skin';
+        const slot = 'players/p'+(onlineRole==='host' ? 1 : onlineMySlot)+'/skin';
         fbDb.ref(roomPath(roomCode, slot)).set(k);
       }
     }, null);
   }
 
+  // 슬롯 번호(1~4) -> 스폰 모서리 좌표. 1=좌상단, 2=우하단, 3=우상단, 4=좌하단.
+  function cornerForSlot(slot){
+    if(slot===1) return [1,1];
+    if(slot===2) return [COLS-2, ROWS-2];
+    if(slot===3) return [COLS-2, 1];
+    return [1, ROWS-2];
+  }
   function startOnlineHostGame(){
-    if(!guestConnected){ alert('상대방이 아직 입장하지 않았습니다.'); return; }
+    const connectedGuestSlots = [2,3,4].filter(s=>s<=onlineMaxPlayers && guestConnectedSlots[s]);
+    if(connectedGuestSlots.length===0){ alert('상대방이 아직 입장하지 않았습니다.'); return; }
     onlineMode = true;
     mode = '2p';
     applyDimensions(onlineSelectedSizeKey);
     currentThemeIdx = onlineSelectedThemeIdx; startThemeIdx = onlineSelectedThemeIdx; stageNum = 1;
+    statsStartTime = Date.now(); statsStagesCleared = 0; statsItemsCollected = 0;
     buildGrid(0.62);
-    bombs = []; explosions = []; shake = 0;
+    bombs = []; explosions = []; shake = 0; floatTexts = [];
     const remoteControls = {up:[],down:[],left:[],right:[],bomb:[]};
     const hostControls = {up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],bomb:['Space','Enter']};
-    players = [
-      makePlayer(0, 1,1, hostControls, onlineSkin),
-      makePlayer(1, COLS-2, ROWS-2, remoteControls, guestSkinFromHost),
-    ];
+    const activeSlots = [1, ...connectedGuestSlots].sort((a,b)=>a-b);
+    players = activeSlots.map(slot=>{
+      const [gx,gy] = cornerForSlot(slot);
+      const skinKey = slot===1 ? onlineSkin : remoteSkins[slot];
+      const controls = slot===1 ? hostControls : remoteControls;
+      return makePlayer(slot-1, gx, gy, controls, skinKey);
+    });
     enemies = [];
-    p2Label.textContent = 'PLAYER 2';
-    p2Box.classList.remove('p1'); p2Box.classList.add('p2');
     tpad2.style.display = 'none'; tbomb2.style.display = 'none';
     lastOverTitle=''; lastOverDesc='';
     gameState = 'playing';
@@ -689,6 +1017,7 @@
     updateHud();
     updateLegend();
     fbDb.ref(roomPath(roomCode,'status')).set('playing');
+    fbDb.ref(roomPath(roomCode,'maxPlayers')).set(onlineMaxPlayers);
     pushHostStateNow();
     if(hostBroadcastTimer) clearInterval(hostBroadcastTimer);
     hostBroadcastTimer = setInterval(()=>{ if(gameState==='playing'||gameState==='over') pushHostStateNow(); }, 100);
@@ -710,6 +1039,8 @@
       shake: shake,
       gameState: gameState,
       overTitle: lastOverTitle, overDesc: lastOverDesc,
+      itemsCollected: statsItemsCollected,
+      elapsedMs: statsStartTime ? (Date.now()-statsStartTime) : 0,
       ts: Date.now(),
     };
   }
@@ -755,6 +1086,10 @@
       guestPrevPlayers = newTargets.map(p=>({px:p.px, py:p.py}));
     }
     guestTargetPlayers = newTargets.map(p=>({px:p.px, py:p.py}));
+    // 호스트가 계산한 통계(아이템 획득 수, 경과 시간)를 게스트 쪽에도 그대로 반영해
+    // 온라인 대전 결과 화면에도 로컬 모드처럼 요약이 나오도록 한다.
+    statsItemsCollected = s.itemsCollected||0;
+    lastElapsedMs = s.elapsedMs||0;
     const nowT = performance.now();
     guestInterpDuration = guestLastStateTime ? Math.min(250, Math.max(40, nowT-guestLastStateTime)) : 100;
     guestInterpStart = nowT;
@@ -769,6 +1104,7 @@
       hideAllOverlays();
       overTitle.textContent = s.overTitle||'게임 종료';
       overDesc.textContent = s.overDesc||'';
+      document.getElementById('overStats').innerHTML = buildOverStatsLines().join('<br>');
       document.getElementById('btnRetry').classList.add('hidden');
       document.getElementById('btnRematch').classList.add('hidden');
       document.getElementById('btnMenu').textContent = '나가기';
@@ -802,7 +1138,7 @@
     guestInputTimer = setInterval(sendGuestInputTick, 50);
   }
   function sendGuestInputTick(){
-    if(gameState!=='playing' || !fbDb || !roomCode) return;
+    if(gameState!=='playing' || !fbDb || !roomCode || !onlineMySlot) return;
     const cur = {
       up: keys.has('KeyW')||keys.has('ArrowUp'),
       down: keys.has('KeyS')||keys.has('ArrowDown'),
@@ -811,14 +1147,14 @@
     };
     if(!lastSentInput || cur.up!==lastSentInput.up || cur.down!==lastSentInput.down || cur.left!==lastSentInput.left || cur.right!==lastSentInput.right){
       lastSentInput = cur;
-      fbDb.ref(roomPath(roomCode,'input/p2')).update(cur);
+      fbDb.ref(roomPath(roomCode,'input/p'+onlineMySlot)).update(cur);
     }
   }
   function sendGuestBombPress(){
     localBombSeq++;
-    if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'input/p2/bombSeq')).set(localBombSeq);
+    if(fbDb && roomCode && onlineMySlot) fbDb.ref(roomPath(roomCode,'input/p'+onlineMySlot+'/bombSeq')).set(localBombSeq);
     // 예측: 서버 왕복을 기다리지 않고 내 화면에 즉시 임시 폭탄을 그려줌
-    const me = players[1];
+    const me = players[onlineMySlot-1];
     if(me && me.alive){
       const cx = Math.floor((me.px+PLAYER_SIZE/2)/TILE);
       const cy = Math.floor((me.py+PLAYER_SIZE/2)/TILE);
@@ -844,6 +1180,7 @@
   function leaveOnlineRoom(silent){
     cancelGuestDisconnectGraceTimer();
     cancelHostDisconnectGraceTimer();
+    stopPingMonitor();
     guestPredictedBombs = [];
     try{
       if(hostBroadcastTimer){ clearInterval(hostBroadcastTimer); hostBroadcastTimer=null; }
@@ -851,18 +1188,18 @@
       if(fbDb && roomCode){
         if(onlineRole==='host'){
           fbDb.ref(roomPath(roomCode)).remove();
-        } else if(onlineRole==='guest'){
-          fbDb.ref(roomPath(roomCode,'players/p2')).remove();
-          fbDb.ref(roomPath(roomCode,'input/p2')).remove();
+        } else if(onlineRole==='guest' && onlineMySlot){
+          fbDb.ref(roomPath(roomCode,'players/p'+onlineMySlot)).remove();
+          fbDb.ref(roomPath(roomCode,'input/p'+onlineMySlot)).remove();
         }
-        fbDb.ref(roomPath(roomCode,'players/p2')).off();
-        fbDb.ref(roomPath(roomCode,'players/p1')).off();
-        fbDb.ref(roomPath(roomCode,'input/p2')).off();
+        fbDb.ref(roomPath(roomCode,'players')).off();
+        fbDb.ref(roomPath(roomCode,'maxPlayers')).off();
+        for(let s=2;s<=4;s++){ fbDb.ref(roomPath(roomCode,'input/p'+s)).off(); }
         fbDb.ref(roomPath(roomCode,'state')).off();
         fbDb.ref(roomPath(roomCode,'status')).off();
       }
     }catch(e){ console.error(e); }
-    onlineMode = false; onlineRole = null; roomCode = null; guestConnected = false;
+    onlineMode = false; onlineRole = null; roomCode = null; guestConnected = false; onlineMySlot = null; rosterCache = {};
     if(!silent){
       hideAllOverlays();
       gameState = 'start';
@@ -889,6 +1226,20 @@
   const BASE_SPEED = 128;
   const SPEED_STEP = 26;
   const POWERUP_CHANCE = 0.35;
+  const POWERUP_LABELS = {bomb:'+1 BOMB', range:'+1 RANGE', speed:'+1 SPD', life:'+1 LIFE', kick:'KICK!', pierce:'PIERCE!', shield:'SHIELD!'};
+  const POWERUP_COLORS = {bomb:'#ff8a3d', range:'#ff4d4d', speed:'#4dd2ff', life:'#4dff88', kick:'#b980ff', pierce:'#ffe066', shield:'#cfd8ff'};
+  // 색약 모드: 색상 구분이 어려운 사용자를 위한 고대비 팔레트 (Okabe-Ito 팔레트 기반)
+  const POWERUP_COLORS_CB = {bomb:'#E69F00', range:'#D55E00', speed:'#56B4E9', life:'#009E73', kick:'#CC79A7', pierce:'#F0E442', shield:'#0072B2'};
+  const POWERUP_ICONS = {bomb:'B', range:'F', speed:'S', life:'♥', kick:'K', pierce:'P', shield:'D'};
+  let colorblindMode = false;
+  try{ colorblindMode = localStorage.getItem('bomberman_colorblind')==='1'; }catch(e){}
+  function puColor(pu){ return (colorblindMode ? POWERUP_COLORS_CB : POWERUP_COLORS)[pu]; }
+  function applyLegendSwatches(){
+    document.querySelectorAll('.swatch[data-pu]').forEach(el=>{
+      const pu = el.getAttribute('data-pu');
+      el.style.background = puColor(pu);
+    });
+  }
   const BASE_LIVES = 3;
   const RESPAWN_INVULN = 2000;
   const KICK_SPEED_STEP = 90; // ms per tile while kicked
@@ -944,25 +1295,35 @@
 
   // ---------- 오디오 ----------
   let actx = null;
-  let musicOn = true;
-  let sfxOn = true;
+  let sfxVolume = 0.7;
+  let musicVolume = 0.55;
+  try{
+    const savedVol = localStorage.getItem('bomberman_sfx_vol');
+    if(savedVol!==null) sfxVolume = Math.max(0, Math.min(1, parseFloat(savedVol)));
+    const savedMusicVol = localStorage.getItem('bomberman_music_vol');
+    if(savedMusicVol!==null) musicVolume = Math.max(0, Math.min(1, parseFloat(savedMusicVol)));
+  }catch(e){}
   let musicTimer = null;
   let noteIndex = 0;
   function ensureAudio(){
     if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
     if(actx && !musicTimer) startMusic();
   }
-  function beep(freq, dur, type, vol){
-    if(!actx || !sfxOn) return;
+  function beepRaw(freq, dur, type, vol){
+    if(!actx) return;
     const t0 = actx.currentTime;
     const osc = actx.createOscillator();
     const gain = actx.createGain();
     osc.type = type||'square';
     osc.frequency.setValueAtTime(freq, t0);
-    gain.gain.setValueAtTime((vol||0.15), t0);
+    gain.gain.setValueAtTime(vol, t0);
     gain.gain.exponentialRampToValueAtTime(0.001, t0+dur);
     osc.connect(gain); gain.connect(actx.destination);
     osc.start(t0); osc.stop(t0+dur);
+  }
+  function beep(freq, dur, type, vol){
+    if(sfxVolume<=0) return;
+    beepRaw(freq, dur, type, (vol||0.15)*sfxVolume);
   }
   function sfxPlace(){ beep(220,0.08,'square',0.12); }
   function sfxExplode(){ beep(90,0.25,'sawtooth',0.18); setTimeout(()=>beep(60,0.2,'square',0.12),40); }
@@ -976,11 +1337,11 @@
     if(musicTimer) return;
     noteIndex = 0;
     musicTimer = setInterval(()=>{
-      if(!musicOn || !actx) return;
+      if(musicVolume<=0 || !actx) return;
       const pattern = MUSIC_PATTERNS[currentThemeIdx % MUSIC_PATTERNS.length];
       const note = pattern[noteIndex % pattern.length];
       noteIndex++;
-      if(note>0) beep(note, 0.13, 'triangle', 0.045);
+      if(note>0) beepRaw(note, 0.13, 'triangle', 0.045*musicVolume);
     }, 150);
   }
 
@@ -993,9 +1354,61 @@
   let explosions = [];
   let players = [];
   let enemies = [];
+  let floatTexts = [];
+  function spawnFloatText(x,y,text,color){
+    floatTexts.push({x,y,text,color: color||'#fff4d6', life:900, maxLife:900});
+  }
   let keys = new Set();
   let shake = 0;
   let lastTime = 0;
+
+  // ---------- 게임 통계 ----------
+  let statsStartTime = 0;
+  let statsStagesCleared = 0;
+  let statsItemsCollected = 0;
+  let statsHitTaken = false; // 이번 판에서 한 번이라도 피격/보호막 소모가 있었는지 (무피격 기록용)
+  let stageStartTime = 0; // 현재 스테이지가 시작된 시각 (스테이지 클리어 시간 기록용)
+  function formatPlayTime(ms){
+    const totalSec = Math.max(0, Math.floor(ms/1000));
+    const m = Math.floor(totalSec/60);
+    const s = totalSec%60;
+    return `${m}:${s<10?'0':''}${s}`;
+  }
+
+  // ---------- 조작 커스터마이징 ----------
+  const DEFAULT_P1_BINDINGS = {up:'KeyW', down:'KeyS', left:'KeyA', right:'KeyD', bomb:'Space'};
+  const DEFAULT_P2_BINDINGS = {up:'ArrowUp', down:'ArrowDown', left:'ArrowLeft', right:'ArrowRight', bomb:'Enter'};
+  function loadBindings(prefix, def){
+    try{
+      const raw = localStorage.getItem('bomberman_keys_'+prefix);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        return {up:parsed.up||def.up, down:parsed.down||def.down, left:parsed.left||def.left, right:parsed.right||def.right, bomb:parsed.bomb||def.bomb};
+      }
+    }catch(e){}
+    return Object.assign({}, def);
+  }
+  function saveBindings(prefix, b){
+    try{ localStorage.setItem('bomberman_keys_'+prefix, JSON.stringify(b)); }catch(e){}
+  }
+  let p1Bindings = loadBindings('p1', DEFAULT_P1_BINDINGS);
+  let p2Bindings = loadBindings('p2', DEFAULT_P2_BINDINGS);
+  function keyLabel(code){
+    if(!code) return '?';
+    const map = {Space:'SPACE', Enter:'ENTER', ArrowUp:'↑', ArrowDown:'↓', ArrowLeft:'←', ArrowRight:'→',
+      ShiftLeft:'L-SHIFT', ShiftRight:'R-SHIFT', ControlLeft:'L-CTRL', ControlRight:'R-CTRL',
+      AltLeft:'L-ALT', AltRight:'R-ALT', Tab:'TAB', CapsLock:'CAPS'};
+    if(map[code]) return map[code];
+    if(code.startsWith('Key')) return code.slice(3);
+    if(code.startsWith('Digit')) return code.slice(5);
+    return code;
+  }
+  function singleControls(b){ return {up:[b.up], down:[b.down], left:[b.left], right:[b.right], bomb:[b.bomb]}; }
+  function mergedControls(b1,b2){ return {up:[b1.up,b2.up], down:[b1.down,b2.down], left:[b1.left,b2.left], right:[b1.right,b2.right], bomb:[b1.bomb,b2.bomb]}; }
+  function activeGameKeys(){
+    return new Set([p1Bindings.up,p1Bindings.down,p1Bindings.left,p1Bindings.right,p1Bindings.bomb,
+                     p2Bindings.up,p2Bindings.down,p2Bindings.left,p2Bindings.right,p2Bindings.bomb]);
+  }
 
   const startScreen = document.getElementById('startScreen');
   const mapScreen = document.getElementById('mapScreen');
@@ -1014,6 +1427,8 @@
   const overScreen = document.getElementById('overScreen');
   const overTitle = document.getElementById('overTitle');
   const overDesc = document.getElementById('overDesc');
+  const keyConfigScreen = document.getElementById('keyConfigScreen');
+  const keyConfigBody = document.getElementById('keyConfigBody');
   const hudMid = document.getElementById('hudMid');
   const p1Stats = document.getElementById('p1-stats');
   const p2Stats = document.getElementById('p2-stats');
@@ -1022,24 +1437,49 @@
   const tpad2 = document.getElementById('tpad2');
   const legendP1 = document.getElementById('legendP1');
   const legendP2 = document.getElementById('legendP2');
+  function moveKeysHtml(b){
+    return `<span class="key">${keyLabel(b.up)}</span><span class="key">${keyLabel(b.left)}</span><span class="key">${keyLabel(b.down)}</span><span class="key">${keyLabel(b.right)}</span>`;
+  }
   function updateLegend(){
     if(onlineMode){
       legendP1.innerHTML = '<b>내 캐릭터</b><br>이동 <span class="key">WASD</span> 또는 <span class="key">방향키</span>&nbsp;폭탄 <span class="key">SPACE</span> / <span class="key">ENTER</span>';
       legendP2.style.display = 'none';
     } else if(mode==='2p'){
-      legendP1.innerHTML = '<b>PLAYER 1</b><br>이동 <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>&nbsp;폭탄 <span class="key">SPACE</span>';
+      legendP1.innerHTML = `<b>PLAYER 1</b><br>이동 ${moveKeysHtml(p1Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p1Bindings.bomb)}</span>`;
       legendP2.style.display = '';
-      legendP2.innerHTML = '<b>PLAYER 2</b><br>이동 <span class="key">방향키</span>&nbsp;폭탄 <span class="key">ENTER</span>';
+      legendP2.innerHTML = `<b>PLAYER 2</b><br>이동 ${moveKeysHtml(p2Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p2Bindings.bomb)}</span>`;
     } else {
-      legendP1.innerHTML = '<b>PLAYER 1</b><br>이동 <span class="key">WASD</span> 또는 <span class="key">방향키</span>&nbsp;폭탄 <span class="key">SPACE</span> / <span class="key">ENTER</span>';
+      legendP1.innerHTML = `<b>PLAYER 1</b><br>이동 ${moveKeysHtml(p1Bindings)} 또는 ${moveKeysHtml(p2Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p1Bindings.bomb)}</span> / <span class="key">${keyLabel(p2Bindings.bomb)}</span>`;
       legendP2.style.display = 'none';
     }
   }
   const tbomb2 = document.getElementById('tbomb2');
 
   function hideAllOverlays(){
-    [startScreen, mapScreen, onlineScreenEl, stageClearScreen, overScreen].forEach(o=>o.classList.add('hidden'));
+    [startScreen, mapScreen, onlineScreenEl, stageClearScreen, overScreen, keyConfigScreen].forEach(o=>{ o.classList.add('hidden'); o.scrollTop = 0; });
+    confirmScreen.classList.add('hidden');
   }
+
+  // ---------- 확인 팝업 ----------
+  const confirmScreen = document.getElementById('confirmScreen');
+  const confirmTitleEl = document.getElementById('confirmTitle');
+  const confirmDescEl = document.getElementById('confirmDesc');
+  let confirmYesHandler = null;
+  function showConfirm(title, desc, onYes){
+    confirmTitleEl.textContent = title;
+    confirmDescEl.textContent = desc;
+    confirmYesHandler = onYes;
+    confirmScreen.classList.remove('hidden');
+  }
+  document.getElementById('btnConfirmYes').addEventListener('click', ()=>{
+    confirmScreen.classList.add('hidden');
+    const fn = confirmYesHandler; confirmYesHandler = null;
+    if(fn) fn();
+  });
+  document.getElementById('btnConfirmNo').addEventListener('click', ()=>{
+    confirmScreen.classList.add('hidden');
+    confirmYesHandler = null;
+  });
 
   // ---------- 맵 선택 화면 ----------
   function renderSizeRow(){
@@ -1061,6 +1501,7 @@
       b.addEventListener('click', ()=>{ selectedDifficulty = key; renderDifficultyRow(); });
       diffRow.appendChild(b);
     });
+    updateDiffBestText();
   }
   function renderStageRow(){
     stageRow.innerHTML = '';
@@ -1109,8 +1550,37 @@
     }
     return cells.join('');
   }
+  function startLocalGameWithTheme(idx){
+    ensureAudio();
+    startThemeIdx = idx;
+    currentThemeIdx = idx;
+    mode = selectedMode;
+    currentDifficulty = DIFFICULTY_PRESETS[selectedDifficulty];
+    currentDifficultyKey = selectedDifficulty;
+    stageNum = (mode==='1p') ? selectedStartStage : 1;
+    applyDimensions(selectedSizeKey);
+    setupGame(true);
+  }
+  // 맵 선택 그리드 맨 앞에 넣을 "랜덤" 카드. 클릭할 때마다 THEMES 중 하나를 무작위로 골라 onPick으로 넘긴다.
+  function buildRandomMapCard(onPick){
+    const card = document.createElement('div');
+    card.className = 'map-card';
+    card.innerHTML = `
+      <div class="map-thumb" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#3a2a54,#1c1229);">
+        <span style="font-size:26px;">🎲</span>
+      </div>
+      <div class="map-icon">🎲</div>
+      <div class="map-name">랜덤</div>
+    `;
+    card.addEventListener('click', ()=>{
+      const idx = Math.floor(Math.random()*THEMES.length);
+      onPick(idx);
+    });
+    return card;
+  }
   function renderMapGrid(){
     mapGrid.innerHTML = '';
+    mapGrid.appendChild(buildRandomMapCard((idx)=>{ startLocalGameWithTheme(idx); }));
     THEMES.forEach((theme, idx)=>{
       const card = document.createElement('div');
       card.className = 'map-card';
@@ -1119,16 +1589,7 @@
         <div class="map-icon">${theme.icon}</div>
         <div class="map-name">${theme.name}</div>
       `;
-      card.addEventListener('click', ()=>{
-        ensureAudio();
-        startThemeIdx = idx;
-        currentThemeIdx = idx;
-        mode = selectedMode;
-        currentDifficulty = DIFFICULTY_PRESETS[selectedDifficulty];
-        stageNum = (mode==='1p') ? selectedStartStage : 1;
-        applyDimensions(selectedSizeKey);
-        setupGame(true);
-      });
+      card.addEventListener('click', ()=>{ startLocalGameWithTheme(idx); });
       mapGrid.appendChild(card);
     });
   }
@@ -1136,15 +1597,19 @@
     selectedMode = m;
     hideAllOverlays();
     mapScreen.classList.remove('hidden');
+    mapScreen.scrollTop = 0;
+    requestAnimationFrame(()=>{ mapScreen.scrollTop = 0; });
     if(m==='1p'){
       mapTitle.textContent = '시작할 맵을 선택하세요';
       mapDesc.textContent = '스테이지를 클리어할 때마다 다음 맵으로 자동으로 넘어가며 난이도가 올라갑니다.';
       diffLabel.style.display = ''; diffRow.style.display = '';
+      document.getElementById('diffBestText').style.display = '';
       stageLabel.style.display = ''; stageRow.style.display = '';
     } else {
       mapTitle.textContent = '대전할 맵을 선택하세요';
       mapDesc.textContent = '선택한 맵에서 플레이어 1과 2가 맞대결합니다.';
       diffLabel.style.display = 'none'; diffRow.style.display = 'none';
+      document.getElementById('diffBestText').style.display = 'none';
       stageLabel.style.display = 'none'; stageRow.style.display = 'none';
     }
     renderSizeRow();
@@ -1154,10 +1619,88 @@
     renderMapGrid();
   }
 
-  // ---------- 입력 ----------
-  const GAME_KEYS = new Set(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter']);
+  // ---------- 조작 설정 화면 ----------
+  const ACTION_LABELS = {up:'위', down:'아래', left:'왼쪽', right:'오른쪽', bomb:'폭탄'};
+  let awaitingBind = null; // {player:'p1'|'p2', action:'up'|...}
+  const keyConfigWarning = document.getElementById('keyConfigWarning');
+  function findDuplicateActions(bindings){
+    // 같은 코드가 두 개 이상의 액션에 배정된 경우 그 액션 이름들을 반환
+    const byCode = {};
+    Object.keys(ACTION_LABELS).forEach(action=>{
+      const code = bindings[action];
+      if(!code) return;
+      (byCode[code] = byCode[code] || []).push(action);
+    });
+    const dupActions = new Set();
+    Object.values(byCode).forEach(actions=>{
+      if(actions.length>1) actions.forEach(a=>dupActions.add(a));
+    });
+    return dupActions;
+  }
+  function updateKeyConfigWarning(){
+    const messages = [];
+    [['PLAYER 1', p1Bindings],['PLAYER 2', p2Bindings]].forEach(([label,bindings])=>{
+      const dups = findDuplicateActions(bindings);
+      if(dups.size>0){
+        const names = [...dups].map(a=>ACTION_LABELS[a]).join(', ');
+        messages.push(`⚠️ ${label}: ${names} 동작에 같은 키가 겹쳐 있어요. 서로 다른 키로 바꿔주세요.`);
+      }
+    });
+    if(messages.length>0){
+      keyConfigWarning.innerHTML = messages.join('<br>');
+      keyConfigWarning.classList.remove('hidden');
+    } else {
+      keyConfigWarning.classList.add('hidden');
+    }
+  }
+  function renderKeyConfig(){
+    keyConfigBody.innerHTML = '';
+    [['p1','PLAYER 1', p1Bindings],['p2','PLAYER 2', p2Bindings]].forEach(([pid,label,bindings])=>{
+      const group = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'skin-group-title';
+      title.textContent = label;
+      group.appendChild(title);
+      const list = document.createElement('div');
+      list.style.cssText = 'display:flex; flex-direction:column; gap:8px;';
+      const dupActions = findDuplicateActions(bindings);
+      Object.keys(ACTION_LABELS).forEach(action=>{
+        const isAwaiting = awaitingBind && awaitingBind.player===pid && awaitingBind.action===action;
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:14px; min-width:210px;';
+        const span = document.createElement('span');
+        span.style.cssText = 'font-size:9px; color:#cfc2e8;';
+        span.textContent = ACTION_LABELS[action];
+        const btn = document.createElement('button');
+        btn.className = 'size-btn' + (isAwaiting?' active':'') + (dupActions.has(action)?' dup-warning':'');
+        btn.style.minWidth = '92px';
+        btn.textContent = isAwaiting ? '키 입력...' : keyLabel(bindings[action]);
+        if(dupActions.has(action)) btn.title = '다른 동작과 같은 키가 배정되어 있어요';
+        btn.addEventListener('click', ()=>{ awaitingBind = {player:pid, action}; renderKeyConfig(); });
+        row.appendChild(span); row.appendChild(btn);
+        list.appendChild(row);
+      });
+      group.appendChild(list);
+      keyConfigBody.appendChild(group);
+    });
+    updateKeyConfigWarning();
+  }
   window.addEventListener('keydown', (e)=>{
-    if(GAME_KEYS.has(e.code)) e.preventDefault();
+    if(!awaitingBind) return;
+    e.preventDefault(); e.stopPropagation();
+    if(e.code!=='Escape'){
+      const bindings = awaitingBind.player==='p1' ? p1Bindings : p2Bindings;
+      bindings[awaitingBind.action] = e.code;
+      saveBindings(awaitingBind.player, bindings);
+    }
+    awaitingBind = null;
+    renderKeyConfig();
+    updateLegend();
+  }, {capture:true});
+
+  // ---------- 입력 ----------
+  window.addEventListener('keydown', (e)=>{
+    if(activeGameKeys().has(e.code)) e.preventDefault();
     if(gameState!=='playing') return;
     if(!keys.has(e.code)){
       keys.add(e.code);
@@ -1174,8 +1717,8 @@
   function bindTouchButtons(){
     document.querySelectorAll('.tbtn').forEach(btn=>{
       const code = btn.getAttribute('data-key');
-      const press = (e)=>{ e.preventDefault(); ensureAudio(); keys.add(code); btn.classList.add('pressed'); };
-      const release = (e)=>{ if(e) e.preventDefault(); keys.delete(code); btn.classList.remove('pressed'); };
+      const press = (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); keys.add(code); btn.classList.add('pressed'); };
+      const release = (e)=>{ if(touchPositionMode) return; if(e) e.preventDefault(); keys.delete(code); btn.classList.remove('pressed'); };
       btn.addEventListener('pointerdown', press);
       btn.addEventListener('pointerup', release);
       btn.addEventListener('pointerleave', release);
@@ -1183,14 +1726,166 @@
     });
     const bomb1 = document.getElementById('tbomb1');
     const bomb2 = document.getElementById('tbomb2');
-    bomb1.addEventListener('pointerdown', (e)=>{ e.preventDefault(); ensureAudio(); bomb1.classList.add('pressed'); myBombPress(); });
-    bomb1.addEventListener('pointerup', ()=>bomb1.classList.remove('pressed'));
-    bomb1.addEventListener('pointerleave', ()=>bomb1.classList.remove('pressed'));
-    bomb2.addEventListener('pointerdown', (e)=>{ e.preventDefault(); ensureAudio(); bomb2.classList.add('pressed'); if(players[1]) tryPlaceBomb(players[1]); });
-    bomb2.addEventListener('pointerup', ()=>bomb2.classList.remove('pressed'));
-    bomb2.addEventListener('pointerleave', ()=>bomb2.classList.remove('pressed'));
+    bomb1.addEventListener('pointerdown', (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); bomb1.classList.add('pressed'); myBombPress(); });
+    bomb1.addEventListener('pointerup', ()=>{ if(!touchPositionMode) bomb1.classList.remove('pressed'); });
+    bomb1.addEventListener('pointerleave', ()=>{ if(!touchPositionMode) bomb1.classList.remove('pressed'); });
+    bomb2.addEventListener('pointerdown', (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); bomb2.classList.add('pressed'); if(players[1]) tryPlaceBomb(players[1]); });
+    bomb2.addEventListener('pointerup', ()=>{ if(!touchPositionMode) bomb2.classList.remove('pressed'); });
+    bomb2.addEventListener('pointerleave', ()=>{ if(!touchPositionMode) bomb2.classList.remove('pressed'); });
   }
   bindTouchButtons();
+
+  // ---------- 터치 컨트롤 크기/위치 커스터마이징 ----------
+  const touchScaleRange = document.getElementById('touchScaleRange');
+  const touchScaleVal = document.getElementById('touchScaleVal');
+  // pos 값은 canvasWrap 기준 중심점의 퍼센트 좌표(x,y). null이면 기본 위치를 사용한다.
+  const DEFAULT_TOUCH_SETTINGS = {
+    scale:100,
+    pos:{
+      p1pad:  {x:16, y:86},
+      p1bomb: {x:40, y:86},
+      p2pad:  {x:84, y:86},
+      p2bomb: {x:60, y:86},
+    }
+  };
+  function migrateTouchSettings(raw){
+    // 예전 버전(edgeX/edgeY 슬라이더 기반) 저장값이 있으면 대략 비슷한 위치로 변환해준다.
+    if(raw && raw.edgeX!=null && !raw.pos){
+      const ex = raw.edgeX, ey = raw.edgeY!=null?raw.edgeY:2;
+      return {
+        scale: raw.scale||100,
+        pos:{
+          p1pad:  {x: ex+12, y: 100-ey-12},
+          p1bomb: {x: ex+24+2+6, y: 100-ey-6},
+          p2pad:  {x: 100-ex-12, y: 100-ey-12},
+          p2bomb: {x: 100-ex-24-2-6, y: 100-ey-6},
+        }
+      };
+    }
+    return raw;
+  }
+  function loadTouchSettings(){
+    try{
+      const raw = localStorage.getItem('bomberman_touch_settings');
+      if(raw){
+        const parsed = migrateTouchSettings(JSON.parse(raw));
+        return {
+          scale: parsed.scale || DEFAULT_TOUCH_SETTINGS.scale,
+          pos: Object.assign({}, DEFAULT_TOUCH_SETTINGS.pos, parsed.pos||{}),
+        };
+      }
+    }catch(e){}
+    return JSON.parse(JSON.stringify(DEFAULT_TOUCH_SETTINGS));
+  }
+  function saveTouchSettings(s){
+    try{ localStorage.setItem('bomberman_touch_settings', JSON.stringify(s)); }catch(e){}
+  }
+  let touchSettings = loadTouchSettings();
+  const touchEls = {
+    p1pad:  document.querySelector('.tpad.p1'),
+    p1bomb: document.getElementById('tbomb1'),
+    p2pad:  document.getElementById('tpad2'),
+    p2bomb: document.getElementById('tbomb2'),
+  };
+  function applyTouchSettings(){
+    document.documentElement.style.setProperty('--touch-scale', touchSettings.scale/100);
+    for(const key in touchEls){
+      const p = touchSettings.pos[key];
+      if(p && touchEls[key]){
+        touchEls[key].style.left = p.x+'%';
+        touchEls[key].style.top = p.y+'%';
+      }
+    }
+    touchScaleRange.value = touchSettings.scale;
+    touchScaleVal.textContent = touchSettings.scale+'%';
+  }
+  applyTouchSettings();
+  touchScaleRange.addEventListener('input', ()=>{
+    touchSettings.scale = parseInt(touchScaleRange.value,10);
+    applyTouchSettings(); saveTouchSettings(touchSettings);
+  });
+  document.getElementById('btnResetTouch').addEventListener('click', ()=>{
+    touchSettings = JSON.parse(JSON.stringify(DEFAULT_TOUCH_SETTINGS));
+    applyTouchSettings(); saveTouchSettings(touchSettings);
+  });
+
+  // ---------- 위치 직접 옮기기(드래그) ----------
+  let touchPositionMode = false;
+  let dragState = null; // {key, el}
+  let savedTpad2Display = null, savedTbomb2Display = null;
+
+  function onTouchElPointerDown(key, el){
+    return (e)=>{
+      if(!touchPositionMode) return;
+      e.preventDefault();
+      dragState = {key, el};
+      el.classList.add('dragging');
+      try{ el.setPointerCapture(e.pointerId); }catch(err){}
+    };
+  }
+  function onDragMove(e){
+    if(!dragState) return;
+    e.preventDefault();
+    const wrap = document.getElementById('canvasWrap');
+    const rect = wrap.getBoundingClientRect();
+    if(!rect.width || !rect.height) return;
+    let xPct = ((e.clientX-rect.left)/rect.width)*100;
+    let yPct = ((e.clientY-rect.top)/rect.height)*100;
+    xPct = Math.max(4, Math.min(96, xPct));
+    yPct = Math.max(4, Math.min(96, yPct));
+    touchSettings.pos[dragState.key] = {x:xPct, y:yPct};
+    dragState.el.style.left = xPct+'%';
+    dragState.el.style.top = yPct+'%';
+  }
+  function endDrag(){
+    if(!dragState) return;
+    dragState.el.classList.remove('dragging');
+    dragState = null;
+    saveTouchSettings(touchSettings);
+  }
+  window.addEventListener('pointermove', onDragMove, {passive:false});
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  for(const key in touchEls){
+    if(touchEls[key]) touchEls[key].addEventListener('pointerdown', onTouchElPointerDown(key, touchEls[key]));
+  }
+
+  function enterPositionMode(){
+    touchPositionMode = true;
+    document.getElementById('touchSettingsMain').classList.add('hidden');
+    document.getElementById('touchPositionModeUI').classList.remove('hidden');
+    // 2P 패드가 지금은 안 보이는 상태여도, 미리 옮겨둘 수 있도록 잠시 보이게 한다
+    const tpad2El = touchEls.p2pad, tbomb2El = touchEls.p2bomb;
+    savedTpad2Display = tpad2El.style.display;
+    savedTbomb2Display = tbomb2El.style.display;
+    tpad2El.style.display = 'block';
+    tbomb2El.style.display = 'flex';
+  }
+  function exitPositionMode(){
+    touchPositionMode = false;
+    endDrag();
+    document.getElementById('touchSettingsMain').classList.remove('hidden');
+    document.getElementById('touchPositionModeUI').classList.add('hidden');
+    if(savedTpad2Display!=null) touchEls.p2pad.style.display = savedTpad2Display;
+    if(savedTbomb2Display!=null) touchEls.p2bomb.style.display = savedTbomb2Display;
+  }
+  document.getElementById('btnStartPositioning').addEventListener('click', enterPositionMode);
+  document.getElementById('btnFinishPositioning').addEventListener('click', exitPositionMode);
+
+  let touchSettingsHiddenOverlay = null;
+  document.getElementById('touchGearBtn').addEventListener('click', ()=>{
+    ensureAudio();
+    if(gameState==='playing') togglePause();
+    const overlaysToCheck = [startScreen, mapScreen, onlineScreenEl, stageClearScreen, overScreen, keyConfigScreen, document.getElementById('pauseScreen'), confirmScreen];
+    touchSettingsHiddenOverlay = overlaysToCheck.find(o=>o && !o.classList.contains('hidden')) || null;
+    if(touchSettingsHiddenOverlay) touchSettingsHiddenOverlay.classList.add('hidden');
+    document.getElementById('touchSettingsScreen').classList.remove('hidden');
+  });
+  document.getElementById('btnCloseTouchSettings').addEventListener('click', ()=>{
+    if(touchPositionMode) exitPositionMode();
+    document.getElementById('touchSettingsScreen').classList.add('hidden');
+    if(touchSettingsHiddenOverlay){ touchSettingsHiddenOverlay.classList.remove('hidden'); touchSettingsHiddenOverlay = null; }
+  });
 
   // ---------- 미로 생성 ----------
   function buildGrid(softWallProb){
@@ -1262,16 +1957,22 @@
     mode = selectedMode;
     const softProb = Math.min(0.8, currentDifficulty.softWallBase + stageNum*0.02);
     buildGrid(softProb);
-    bombs = []; explosions = []; shake = 0;
+    bombs = []; explosions = []; shake = 0; floatTexts = [];
+
+    if(freshRun){
+      statsStartTime = Date.now();
+      statsStagesCleared = 0;
+      statsItemsCollected = 0;
+      statsHitTaken = false;
+    }
+    stageStartTime = Date.now();
 
     if(freshRun || players.length===0 || players[0].id!==0){
       players = [];
-      const p1Controls = (mode==='2p')
-        ? {up:['KeyW'],down:['KeyS'],left:['KeyA'],right:['KeyD'],bomb:['Space']}
-        : {up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],bomb:['Space','Enter']};
+      const p1Controls = (mode==='2p') ? singleControls(p1Bindings) : mergedControls(p1Bindings, p2Bindings);
       players.push(makePlayer(0, 1,1, p1Controls, selectedSkinP1));
       if(mode==='2p'){
-        players.push(makePlayer(1, COLS-2,ROWS-2, {up:['ArrowUp'],down:['ArrowDown'],left:['ArrowLeft'],right:['ArrowRight'],bomb:['Enter']}, selectedSkinP2));
+        players.push(makePlayer(1, COLS-2,ROWS-2, singleControls(p2Bindings), selectedSkinP2));
       }
     } else {
       resetPlayerPosition(players[0], 1,1);
@@ -1434,6 +2135,7 @@
     b.owner.bombsActive = Math.max(0, b.owner.bombsActive-1);
     shake = 8;
     sfxExplode();
+    if(navigator.vibrate) navigator.vibrate(30);
     const cells = [{x:b.x,y:b.y,type:'center'}];
     const dirs = [[1,0,'h'],[-1,0,'h'],[0,1,'v'],[0,-1,'v']];
     for(const [dx,dy,type] of dirs){
@@ -1460,6 +2162,8 @@
   }
 
   function checkExplosionDamage(){
+    let killedThisFrame = 0;
+    let comboX = 0, comboY = 0;
     for(const ex of explosions){
       const rect = {l:ex.x*TILE, r:ex.x*TILE+TILE, t:ex.y*TILE, b:ex.y*TILE+TILE};
       for(const p of players){
@@ -1468,14 +2172,23 @@
       }
       for(const en of enemies){
         if(!en.alive) continue;
-        if(rectOverlap(rect, entityRect(en.px,en.py,ENEMY_SIZE))) en.alive=false;
+        if(rectOverlap(rect, entityRect(en.px,en.py,ENEMY_SIZE))){
+          en.alive=false;
+          spawnFloatText(en.px+ENEMY_SIZE/2, en.py, 'KO!', '#ffcc33');
+          killedThisFrame++;
+          comboX = en.px+ENEMY_SIZE/2; comboY = en.py-18;
+        }
       }
+    }
+    if(killedThisFrame>=2){
+      spawnFloatText(comboX, comboY, `${killedThisFrame} COMBO!`, '#ff5577');
     }
   }
   function rectOverlap(a,b){ return a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t; }
 
   function damagePlayer(p){
     if(!p.alive || p.invulnT>0) return;
+    statsHitTaken = true;
     if(p.shield){
       p.shield = false;
       p.invulnT = 1000;
@@ -1506,14 +2219,124 @@
       if(pu==='kick') p.canKick = true;
       if(pu==='pierce') p.pierce = true;
       if(pu==='shield') p.shield = true;
+      statsItemsCollected++;
+      spawnFloatText(p.px+PLAYER_SIZE/2, p.py-4, POWERUP_LABELS[pu]||'', puColor(pu));
       sfxPickup();
     }
   }
 
+  // ---------- 적 AI: 위험 지역(폭탄/폭발) 계산 ----------
+  function computeDangerTiles(){
+    const set = new Set();
+    for(const ex of explosions){ set.add(ex.x+','+ex.y); }
+    for(const b of bombs){
+      if(b.exploded) continue;
+      set.add(b.x+','+b.y);
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+      for(const [dx,dy] of dirs){
+        for(let i=1;i<=b.range;i++){
+          const tx=b.x+dx*i, ty=b.y+dy*i;
+          if(tx<0||ty<0||tx>=COLS||ty>=ROWS) break;
+          const t = grid[ty][tx];
+          if(t===1) break;
+          set.add(tx+','+ty);
+          if(t===2){
+            if(!b.owner.pierce) break;
+          }
+        }
+      }
+    }
+    return set;
+  }
+
   // ---------- 적 AI ----------
   const DIRVEC = { up:[0,-1], down:[0,1], left:[-1,0], right:[1,0] };
-  function updateEnemy(en, dt){
+  function pathHasDanger(dir, curCx, curCy, dangerSet, tiles){
+    const [ddx,ddy] = DIRVEC[dir];
+    let cx=curCx, cy=curCy;
+    for(let i=1;i<=tiles;i++){
+      cx+=ddx; cy+=ddy;
+      if(dangerSet.has(cx+','+cy)) return true;
+    }
+    return false;
+  }
+  // 벽(고정벽/부술 수 있는 벽)을 피해 첫 이동 방향을 찾는 BFS.
+  // avoidSet에 들어있는 칸은 아예 지나갈 수 없는 칸으로 취급한다 (위험 지역 회피용).
+  // isGoal(cx,cy)가 true를 반환하는 첫 칸까지의 최단 경로에서 "첫 번째로 내디뎌야 할 방향"을 돌려준다.
+  function bfsFirstStep(startCx, startCy, isGoal, maxDepth, avoidSet){
+    const key = (x,y)=> x+','+y;
+    const visited = new Set([key(startCx,startCy)]);
+    const queue = [{cx:startCx, cy:startCy, firstDir:null, depth:0}];
+    let qi = 0;
+    while(qi < queue.length){
+      const cur = queue[qi++];
+      if(cur.depth>0 && isGoal(cur.cx,cur.cy)) return cur.firstDir;
+      if(cur.depth>=maxDepth) continue;
+      for(const d of Object.keys(DIRVEC)){
+        const [ddx,ddy] = DIRVEC[d];
+        const nx = cur.cx+ddx, ny = cur.cy+ddy;
+        if(nx<0||ny<0||nx>=COLS||ny>=ROWS) continue;
+        const k = key(nx,ny);
+        if(visited.has(k)) continue;
+        if(grid[ny][nx]===1 || grid[ny][nx]===2) continue;
+        if(avoidSet && avoidSet.has(k)) continue;
+        visited.add(k);
+        queue.push({cx:nx, cy:ny, firstDir: cur.firstDir || d, depth: cur.depth+1});
+      }
+    }
+    return null;
+  }
+  // 위험 지역(폭탄/폭발 예상 범위)을 완전히 피해서 갈 수 있는 가장 가까운 안전한 칸으로의 첫 방향.
+  function findEscapeDirection(curCx, curCy, dangerSet, maxDepth){
+    return bfsFirstStep(curCx, curCy, ()=>true, maxDepth, dangerSet);
+  }
+  // 플레이어가 있는 칸까지 벽을 피해 최단 경로로 가는 첫 방향.
+  function findChaseDirection(curCx, curCy, targetCx, targetCy, maxDepth, dangerSet){
+    return bfsFirstStep(curCx, curCy, (x,y)=>x===targetCx && y===targetCy, maxDepth, dangerSet);
+  }
+  function updateEnemy(en, dt, dangerSet){
     en.changeT -= dt;
+    const curCx = Math.floor((en.px+ENEMY_SIZE/2)/TILE);
+    const curCy = Math.floor((en.py+ENEMY_SIZE/2)/TILE);
+    const lookAhead = (mode==='1p') ? (currentDifficulty.lookAheadTiles||0) : 0;
+    const inDanger = dangerSet.has(curCx+','+curCy) ||
+      (lookAhead>0 && pathHasDanger(en.dir, curCx, curCy, dangerSet, lookAhead));
+
+    if(inDanger){
+      // 위험 지역에 있으면 최우선으로 안전한 방향을 찾아 즉시 탈출 시도
+      const options = Object.keys(DIRVEC).filter(d=>{
+        const [ddx,ddy] = DIRVEC[d];
+        return canStandAt(en.px+ddx*4, en.py+ddy*4, ENEMY_SIZE, null);
+      });
+      const safeOptions = options.filter(d=>{
+        const [ddx,ddy] = DIRVEC[d];
+        const tx = curCx+ddx, ty = curCy+ddy;
+        return !dangerSet.has(tx+','+ty);
+      });
+      // 난이도가 높을수록: 그냥 옆 칸이 안전한지만 보지 않고, 막다른 길로 도망가지 않도록
+      // 진짜 안전한 칸까지 이어지는 경로(BFS)를 찾아 그 방향으로 탈출한다.
+      const escapeDepth = (mode==='1p') ? (currentDifficulty.smartEscapeDepth||0) : 0;
+      let smartDir = null;
+      if(escapeDepth>0 && (!safeOptions.includes(en.dir) || en.changeT<=0)){
+        smartDir = findEscapeDirection(curCx, curCy, dangerSet, escapeDepth);
+        if(smartDir && !options.includes(smartDir)) smartDir = null; // 실제로 그 방향으로 발 디딜 수 있는지 확인
+      }
+      const pool = safeOptions.length ? safeOptions : options;
+      if(smartDir && (!pool.includes(en.dir) || en.changeT<=0)){
+        en.dir = smartDir;
+        en.changeT = 150;
+      } else if(pool.length && (!pool.includes(en.dir) || en.changeT<=0)){
+        en.dir = pool[Math.floor(Math.random()*pool.length)];
+        en.changeT = 150;
+      }
+      const [dx,dy] = DIRVEC[en.dir];
+      const nx = en.px + dx*en.speed*dt/1000;
+      const ny = en.py + dy*en.speed*dt/1000;
+      if(canStandAt(nx, en.py, ENEMY_SIZE, null) && dx!==0) en.px = nx;
+      if(canStandAt(en.px, ny, ENEMY_SIZE, null) && dy!==0) en.py = ny;
+      return;
+    }
+
     const [dx,dy] = DIRVEC[en.dir];
     const nx = en.px + dx*en.speed*dt/1000;
     const ny = en.py + dy*en.speed*dt/1000;
@@ -1526,23 +2349,65 @@
         return canStandAt(en.px+ddx*4, en.py+ddy*4, ENEMY_SIZE, null);
       });
       if(options.length){
-        if(mode==='1p' && Math.random()<currentDifficulty.chaseChance){
-          en.dir = chaseDirection(en, options);
+        // 위험 지역으로 향하는 방향은 가능하면 피해서 고름
+        const safeOptions = options.filter(d=>{
+          const [ddx,ddy] = DIRVEC[d];
+          const tx = curCx+ddx, ty = curCy+ddy;
+          return !dangerSet.has(tx+','+ty);
+        });
+        const pool = safeOptions.length ? safeOptions : options;
+        // 난이도가 높을수록: 목표와의 거리가 충분히 가까워지면 확률(chaseChance)에 기대지 않고 반드시 추격한다.
+        let effectiveChaseChance = currentDifficulty.chaseChance;
+        const aggroTiles = (mode==='1p') ? (currentDifficulty.aggroTiles||0) : 0;
+        if(aggroTiles>0){
+          const aggroTarget = players.find(p=>p.alive);
+          if(aggroTarget){
+            const tCx = Math.floor((aggroTarget.px+PLAYER_SIZE/2)/TILE);
+            const tCy = Math.floor((aggroTarget.py+PLAYER_SIZE/2)/TILE);
+            if(Math.abs(tCx-curCx)+Math.abs(tCy-curCy) <= aggroTiles) effectiveChaseChance = 1;
+          }
+        }
+        if(mode==='1p' && Math.random()<effectiveChaseChance){
+          en.dir = chaseDirection(en, pool, curCx, curCy, dangerSet);
         } else {
-          en.dir = options[Math.floor(Math.random()*options.length)];
+          en.dir = pool[Math.floor(Math.random()*pool.length)];
         }
       }
-      en.changeT = 500 + Math.random()*700;
+      const reactBase = (mode==='1p') ? (currentDifficulty.reactMs||500) : 500;
+      en.changeT = reactBase + Math.random()*reactBase*0.6;
     }
   }
-  function chaseDirection(en, options){
+  function chaseDirection(en, options, curCx, curCy, dangerSet){
     const target = players.find(p=>p.alive);
     if(!target) return options[Math.floor(Math.random()*options.length)];
+    const targetCx = Math.floor((target.px+PLAYER_SIZE/2)/TILE);
+    const targetCy = Math.floor((target.py+PLAYER_SIZE/2)/TILE);
+    // 난이도가 높으면 상대의 "현재 칸"이 아니라, 상대가 이동 중인 방향으로 몇 칸 앞선 칸을 노려
+    // 마치 앞을 가로막듯 추격한다(가로채기). 벽에 막히면 갈 수 있는 만큼만 앞서 계산한다.
+    const predictSteps = (mode==='1p') ? (currentDifficulty.predictSteps||0) : 0;
+    let goalCx = targetCx, goalCy = targetCy;
+    if(predictSteps>0 && target.moving && DIRVEC[target.dir]){
+      const [pdx,pdy] = DIRVEC[target.dir];
+      let px2=targetCx, py2=targetCy;
+      for(let i=0;i<predictSteps;i++){
+        const nx2=px2+pdx, ny2=py2+pdy;
+        if(nx2<0||ny2<0||nx2>=COLS||ny2>=ROWS||grid[ny2][nx2]===1||grid[ny2][nx2]===2) break;
+        px2=nx2; py2=ny2;
+      }
+      goalCx = px2; goalCy = py2;
+    }
+    const chaseDepth = (mode==='1p') ? (currentDifficulty.smartChaseDepth||0) : 0;
+    if(chaseDepth>0){
+      // 난이도가 높으면 직선거리가 아니라 벽을 고려한 실제 최단 경로(BFS)로 추격한다.
+      const smartDir = findChaseDirection(curCx, curCy, goalCx, goalCy, chaseDepth, dangerSet);
+      if(smartDir && options.includes(smartDir)) return smartDir;
+    }
+    // 경로를 못 찾았거나(너무 멀거나 막혀있음) 낮은 난이도인 경우: 직선 거리 기준으로 판단
     let best = options[0], bestDist = Infinity;
     for(const d of options){
       const [ddx,ddy] = DIRVEC[d];
       const nx = en.px+ddx*TILE, ny = en.py+ddy*TILE;
-      const dist = Math.hypot(nx-target.px, ny-target.py);
+      const dist = Math.hypot(nx-(goalCx*TILE+TILE/2), ny-(goalCy*TILE+TILE/2));
       if(dist < bestDist){ bestDist = dist; best = d; }
     }
     return best;
@@ -1553,9 +2418,12 @@
     if(p.invulnT>0) p.invulnT = Math.max(0, p.invulnT-dt);
     if(!p.alive) return;
     let dx=0, dy=0;
-    if(onlineMode && onlineRole==='host' && p.id===1){
-      if(remoteInput.up) dy=-1; else if(remoteInput.down) dy=1;
-      if(remoteInput.left) dx=-1; else if(remoteInput.right) dx=1;
+    if(onlineMode && onlineRole==='host' && p.id>=1){
+      const ri = remoteInputs[p.id+1];
+      if(ri){
+        if(ri.up) dy=-1; else if(ri.down) dy=1;
+        if(ri.left) dx=-1; else if(ri.right) dx=1;
+      }
     } else {
       const c = p.controls;
       const anyKey = (arr)=> arr.some(k=>keys.has(k));
@@ -1596,9 +2464,12 @@
   }
   function update(dt){
     if(gameState!=='playing') return;
+    for(const ft of floatTexts) ft.life -= dt;
+    floatTexts = floatTexts.filter(f=>f.life>0);
     if(onlineMode && onlineRole==='guest'){ interpolateGuestPlayers(); return; } // 게스트는 위치만 부드럽게 보간하고, 실제 판정은 호스트 상태를 그대로 따름
     for(const p of players) updatePlayer(p, dt);
-    for(const en of enemies) if(en.alive) updateEnemy(en, dt);
+    const dangerSet = computeDangerTiles();
+    for(const en of enemies) if(en.alive) updateEnemy(en, dt, dangerSet);
 
     for(const b of bombs){ if(!b.exploded) updateBombKick(b, dt); }
 
@@ -1638,41 +2509,126 @@
       const alive = players.filter(p=>p.alive);
       if(alive.length<=1){
         if(alive.length===1){
-          endGame(true, alive[0].id===0 ? 'PLAYER 1 승리!' : 'PLAYER 2 승리!', '상대를 폭파시켰습니다!');
+          endGame(true, `PLAYER ${alive[0].id+1} 승리!`, '상대를 폭파시켰습니다!');
         } else {
           endGame(true, '무승부!', '두 플레이어 모두 쓰러졌습니다.');
         }
       }
     }
   }
-  function loadBestStage(){
-    try{ return parseInt(localStorage.getItem('bomberman_best_stage')||'0',10)||0; }catch(e){ return 0; }
+  function loadBestStage(diffKey){
+    try{ return parseInt(localStorage.getItem('bomberman_best_stage_'+diffKey)||'0',10)||0; }catch(e){ return 0; }
+  }
+  function loadBestStageTime(diffKey){
+    try{
+      const v = parseInt(localStorage.getItem('bomberman_best_time_'+diffKey)||'0',10);
+      return v>0 ? v : null;
+    }catch(e){ return null; }
+  }
+  function loadBestNoHitStage(diffKey){
+    try{ return parseInt(localStorage.getItem('bomberman_best_nohit_'+diffKey)||'0',10)||0; }catch(e){ return 0; }
+  }
+  function loadOverallBestStage(){
+    let best = 0;
+    for(const key of Object.keys(DIFFICULTY_PRESETS)){ best = Math.max(best, loadBestStage(key)); }
+    return best;
+  }
+  function loadOverallBestStageTime(){
+    let best = null;
+    for(const key of Object.keys(DIFFICULTY_PRESETS)){
+      const t = loadBestStageTime(key);
+      if(t!==null && (best===null || t<best)) best = t;
+    }
+    return best;
+  }
+  function loadOverallBestNoHitStage(){
+    let best = 0;
+    for(const key of Object.keys(DIFFICULTY_PRESETS)){ best = Math.max(best, loadBestNoHitStage(key)); }
+    return best;
   }
   function updateBestStageDisplay(){
-    const best = loadBestStage();
+    const best = loadOverallBestStage();
+    const bestTime = loadOverallBestStageTime();
+    const bestNoHit = loadOverallBestNoHitStage();
     const el = document.getElementById('bestStageText');
     if(!el) return;
-    if(best>0){ el.textContent = `🏆 최고 기록: STAGE ${best} 클리어`; el.style.display='block'; }
+    if(best>0){
+      let html = `🏆 역대 최고 기록: STAGE ${best} 클리어`;
+      if(bestTime!==null) html += ` &nbsp;|&nbsp; ⚡ 최단 스테이지: ${formatPlayTime(bestTime)}`;
+      if(bestNoHit>0) html += ` &nbsp;|&nbsp; 🛡️ 무피격: STAGE ${bestNoHit}`;
+      el.innerHTML = html;
+      el.style.display='block';
+    }
     else { el.style.display='none'; }
   }
-  function saveBestStageIfHigher(n){
+  function updateDiffBestText(){
+    const el = document.getElementById('diffBestText');
+    if(!el) return;
+    const preset = DIFFICULTY_PRESETS[selectedDifficulty];
+    const best = loadBestStage(selectedDifficulty);
+    const bestTime = loadBestStageTime(selectedDifficulty);
+    const bestNoHit = loadBestNoHitStage(selectedDifficulty);
+    if(best>0){
+      let html = `🏆 ${preset.label} 난이도 최고 기록: STAGE ${best} 클리어`;
+      if(bestTime!==null) html += `<br>⚡ 최단 스테이지 클리어: ${formatPlayTime(bestTime)}`;
+      if(bestNoHit>0) html += `<br>🛡️ 무피격 최고 기록: STAGE ${bestNoHit} 클리어`;
+      el.innerHTML = html;
+    } else {
+      el.textContent = `${preset.label} 난이도는 아직 클리어 기록이 없어요.`;
+    }
+  }
+  function saveBestStageIfHigher(n, diffKey){
     try{
-      if(n>loadBestStage()) localStorage.setItem('bomberman_best_stage', String(n));
+      if(n>loadBestStage(diffKey)) localStorage.setItem('bomberman_best_stage_'+diffKey, String(n));
     }catch(e){}
     updateBestStageDisplay();
+    updateDiffBestText();
+  }
+  function saveBestStageTimeIfLower(ms, diffKey){
+    try{
+      const cur = loadBestStageTime(diffKey);
+      if(cur===null || ms<cur) localStorage.setItem('bomberman_best_time_'+diffKey, String(ms));
+    }catch(e){}
+    updateBestStageDisplay();
+    updateDiffBestText();
+  }
+  function saveBestNoHitStageIfHigher(n, diffKey){
+    try{
+      if(n>loadBestNoHitStage(diffKey)) localStorage.setItem('bomberman_best_nohit_'+diffKey, String(n));
+    }catch(e){}
+    updateBestStageDisplay();
+    updateDiffBestText();
   }
   function stageClear(){
     gameState = 'stageclear';
     sfxClear();
-    saveBestStageIfHigher(stageNum);
+    statsStagesCleared++;
+    const stageTimeMs = Date.now() - stageStartTime;
+    saveBestStageIfHigher(stageNum, currentDifficultyKey);
+    saveBestStageTimeIfLower(stageTimeMs, currentDifficultyKey);
+    if(!statsHitTaken) saveBestNoHitStageIfHigher(stageNum, currentDifficultyKey);
     const next = THEMES[(currentThemeIdx+1)%THEMES.length];
     clearDesc.textContent = `STAGE ${stageNum} 클리어! 다음은 "${next.name}" ${next.icon} 맵입니다. 적이 더 강해집니다.`;
     stageClearScreen.classList.remove('hidden');
+  }
+  let lastElapsedMs = 0;
+  // 1인용/로컬 2인용/온라인 대전 모두에서 결과 화면·결과 복사·결과 이미지에 공통으로 쓰는 통계 요약.
+  // 온라인 대전에서는 호스트가 계산한 값을 게스트에게도 그대로 동기화해서 사용한다.
+  function buildOverStatsLines(){
+    const lines = [];
+    if(mode==='1p') lines.push(`🏁 클리어 스테이지: ${statsStagesCleared}`);
+    lines.push(`🎁 획득 아이템: ${statsItemsCollected}개`);
+    lines.push(`⏱ 플레이 시간: ${formatPlayTime(lastElapsedMs)}`);
+    if(mode==='1p' && !onlineMode && !statsHitTaken && statsStagesCleared>0) lines.push('🛡️ 무피격 플레이!');
+    return lines;
   }
   function endGame(win, title, desc){
     gameState = 'over';
     overTitle.textContent = title;
     overDesc.textContent = desc;
+    lastElapsedMs = statsStartTime ? (Date.now()-statsStartTime) : 0;
+    const overStatsEl = document.getElementById('overStats');
+    overStatsEl.innerHTML = buildOverStatsLines().join('<br>');
     overScreen.classList.remove('hidden');
     if(win) sfxWin();
     const btnRetry = document.getElementById('btnRetry');
@@ -1705,14 +2661,63 @@
     const full = Math.max(0,n);
     return '♥'.repeat(Math.min(full,9));
   }
+  function playerStatsHtml(p){
+    return `BOMB ${p.maxBombs}  RANGE ${p.range}  SPD ${p.speedLv}<br><span style="color:#ff6b8a">${heartStr(p.lives)}</span>`;
+  }
+  function applyBoxColor(box, dot, skinKey){
+    const trim = skinKey ? getSkin(skinKey).trim : '';
+    if(box) box.style.borderColor = trim;
+    if(dot) dot.style.background = trim;
+  }
+  function clearBoxColor(box, dot){
+    if(box) box.style.borderColor = '';
+    if(dot) dot.style.background = '';
+  }
   function updateHud(){
     const p1 = players[0];
-    p1Stats.innerHTML = `BOMB ${p1.maxBombs}  RANGE ${p1.range}  SPD ${p1.speedLv}<br><span style="color:#ff6b8a">${heartStr(p1.lives)}</span>`;
+    p1Stats.innerHTML = playerStatsHtml(p1);
+    const p1Box = document.getElementById('p1Box');
+    const p1Dot = document.getElementById('p1Dot');
+    const p2Dot = document.getElementById('p2Dot');
+    const extraRow = document.getElementById('hudExtraRow');
     if(mode==='2p'){
       const p2 = players[1];
-      p2Stats.innerHTML = `BOMB ${p2.maxBombs}  RANGE ${p2.range}  SPD ${p2.speedLv}<br><span style="color:#ff6b8a">${heartStr(p2.lives)}</span>`;
+      if(p2){
+        p2Label.textContent = 'PLAYER 2';
+        p2Stats.innerHTML = playerStatsHtml(p2);
+      }
+      if(onlineMode){
+        applyBoxColor(p1Box, p1Dot, p1.skin);
+        if(p2) applyBoxColor(p2Box, p2Dot, p2.skin);
+        const p3 = players[2], p4 = players[3];
+        if(p3 || p4){
+          extraRow.classList.remove('hidden');
+          [3,4].forEach((n,i)=>{
+            const p = i===0 ? p3 : p4;
+            const box = document.getElementById('p'+n+'Box');
+            const dot = document.getElementById('p'+n+'Dot');
+            const statsEl = document.getElementById('p'+n+'-stats');
+            if(p){
+              box.classList.remove('hidden');
+              statsEl.innerHTML = playerStatsHtml(p);
+              applyBoxColor(box, dot, p.skin);
+            } else {
+              box.classList.add('hidden');
+            }
+          });
+        } else {
+          extraRow.classList.add('hidden');
+        }
+      } else {
+        clearBoxColor(p1Box, p1Dot);
+        clearBoxColor(p2Box, p2Dot);
+        extraRow.classList.add('hidden');
+      }
     } else {
       p2Stats.textContent = `남은 적 ${enemies.length}`;
+      clearBoxColor(p1Box, p1Dot);
+      clearBoxColor(p2Box, p2Dot);
+      extraRow.classList.add('hidden');
     }
   }
 
@@ -1733,6 +2738,24 @@
     drawExplosions();
     for(const en of enemies) drawEnemy(en);
     for(const p of players) if(p.alive) drawPlayer(p);
+    drawFloatTexts();
+    ctx.restore();
+  }
+
+  function drawFloatTexts(){
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 9px monospace';
+    for(const ft of floatTexts){
+      const t = 1 - ft.life/ft.maxLife;
+      const rise = t*22;
+      const alpha = ft.life<200 ? ft.life/200 : 1;
+      ctx.globalAlpha = Math.max(0,alpha);
+      ctx.fillStyle = '#000';
+      ctx.fillText(ft.text, ft.x+1, ft.y - rise+1);
+      ctx.fillStyle = ft.color;
+      ctx.fillText(ft.text, ft.x, ft.y - rise);
+    }
     ctx.restore();
   }
 
@@ -1786,17 +2809,17 @@
         if(!pu) continue;
         const cx = x*TILE+TILE/2, cy = y*TILE+TILE/2;
         const bob = Math.sin(Date.now()/220 + x + y)*2;
-        let color = '#ff8a3d', label='B';
-        if(pu==='range'){ color='#ff4d4d'; label='F'; }
-        if(pu==='speed'){ color='#4dd2ff'; label='S'; }
-        if(pu==='life'){ color='#4dff88'; label='♥'; }
-        if(pu==='kick'){ color='#b980ff'; label='K'; }
-        if(pu==='pierce'){ color='#ffe066'; label='P'; }
-        if(pu==='shield'){ color='#cfd8ff'; label='D'; }
+        const color = puColor(pu);
+        const label = POWERUP_ICONS[pu] || '?';
         ctx.fillStyle = 'rgba(0,0,0,0.25)';
         ctx.beginPath(); ctx.ellipse(cx,cy+10,11,4,0,0,Math.PI*2); ctx.fill();
         ctx.fillStyle = color;
         roundRect(cx-11,cy-11+bob,22,22,5); ctx.fill();
+        if(colorblindMode){
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 2;
+          roundRect(cx-11,cy-11+bob,22,22,5); ctx.stroke();
+        }
         ctx.fillStyle = '#1a1a1a';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -1945,7 +2968,7 @@
 
   applyDimensions('medium');
   buildGrid(0.62);
-  players=[makePlayer(0,1,1,{up:['KeyW'],down:['KeyS'],left:['KeyA'],right:['KeyD'],bomb:['Space']})];
+  players=[makePlayer(0,1,1,singleControls(p1Bindings))];
   draw();
 
   // ---------- 버튼 ----------
@@ -1978,6 +3001,7 @@
   });
   document.getElementById('btnStartOnline').addEventListener('click', ()=>{ startOnlineHostGame(); });
   document.getElementById('btnLeaveRoom').addEventListener('click', ()=>{ leaveOnlineRoom(); });
+  document.getElementById('btnManualReconnect').addEventListener('click', ()=>{ manualReconnectAttempt(); });
   document.getElementById('btnNextStage').addEventListener('click', ()=>{ nextStage(); });
   document.getElementById('btnRetry').addEventListener('click', ()=>{
     if(onlineMode) return;
@@ -1996,48 +3020,185 @@
     startScreen.classList.remove('hidden');
   });
   document.getElementById('btnRestartTop').addEventListener('click', ()=>{
-    if(onlineMode){ leaveOnlineRoom(); return; }
-    hideAllOverlays();
-    gameState='start';
-    startScreen.classList.remove('hidden');
+    const goToMenu = ()=>{
+      if(onlineMode){ leaveOnlineRoom(); return; }
+      hideAllOverlays();
+      gameState='start';
+      startScreen.classList.remove('hidden');
+    };
+    if(gameState==='playing' || gameState==='paused'){
+      showConfirm('처음부터 하시겠어요?', '지금까지의 진행 상황이 사라집니다.', goToMenu);
+    } else {
+      goToMenu();
+    }
   });
-  const musicBtn = document.getElementById('btnMusicToggle');
-  musicBtn.addEventListener('click', ()=>{
+  const musicSlider = document.getElementById('musicVolSlider');
+  const musicIcon = document.getElementById('musicIcon');
+  musicSlider.value = String(Math.round(musicVolume*100));
+  musicIcon.textContent = musicVolume>0 ? '🎵' : '🔇';
+  musicSlider.addEventListener('input', ()=>{
     ensureAudio();
-    musicOn = !musicOn;
-    musicBtn.textContent = musicOn ? '🔊 음악 ON' : '🔇 음악 OFF';
+    musicVolume = parseInt(musicSlider.value,10)/100;
+    musicIcon.textContent = musicVolume>0 ? '🎵' : '🔇';
+    try{ localStorage.setItem('bomberman_music_vol', String(musicVolume)); }catch(e){}
   });
-  const sfxBtn = document.getElementById('btnSfxToggle');
-  sfxBtn.addEventListener('click', ()=>{
-    sfxOn = !sfxOn;
-    sfxBtn.textContent = sfxOn ? '🔔 효과음 ON' : '🔕 효과음 OFF';
+  const sfxSlider = document.getElementById('sfxVolSlider');
+  const sfxIcon = document.getElementById('sfxIcon');
+  sfxSlider.value = String(Math.round(sfxVolume*100));
+  sfxIcon.textContent = sfxVolume>0 ? '🔔' : '🔕';
+  sfxSlider.addEventListener('input', ()=>{
+    sfxVolume = parseInt(sfxSlider.value,10)/100;
+    sfxIcon.textContent = sfxVolume>0 ? '🔔' : '🔕';
+    try{ localStorage.setItem('bomberman_sfx_vol', String(sfxVolume)); }catch(e){}
+  });
+  sfxSlider.addEventListener('change', ()=>{ ensureAudio(); sfxPickup(); });
+
+  function toggleFullscreen(){
+    const el = document.documentElement;
+    if(!document.fullscreenElement){
+      const req = el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+      if(req) req.call(el).catch(()=>{});
+    } else {
+      const exit = document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+      if(exit) exit.call(document);
+    }
+  }
+  const fsBtn = document.getElementById('btnFullscreen');
+  fsBtn.addEventListener('click', toggleFullscreen);
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(evt=>{
+    document.addEventListener(evt, ()=>{
+      fsBtn.textContent = document.fullscreenElement ? '⛶ 전체화면 해제' : '⛶ 전체화면';
+    });
+  });
+
+  const btnColorblind = document.getElementById('btnColorblind');
+  function updateColorblindBtn(){
+    btnColorblind.textContent = colorblindMode ? '🎨 색약 모드: ON' : '🎨 색약 모드: OFF';
+  }
+  btnColorblind.addEventListener('click', ()=>{
+    colorblindMode = !colorblindMode;
+    try{ localStorage.setItem('bomberman_colorblind', colorblindMode ? '1' : '0'); }catch(e){}
+    updateColorblindBtn();
+    applyLegendSwatches();
+  });
+  updateColorblindBtn();
+  applyLegendSwatches();
+
+  let keyConfigReturnTo = 'start';
+  document.getElementById('btnKeyConfig').addEventListener('click', ()=>{
+    hideAllOverlays();
+    keyConfigReturnTo = 'start';
+    keyConfigScreen.classList.remove('hidden');
+    awaitingBind = null;
+    renderKeyConfig();
+  });
+  document.getElementById('btnPauseKeyConfig').addEventListener('click', ()=>{
+    document.getElementById('pauseScreen').classList.add('hidden');
+    keyConfigReturnTo = 'pause';
+    keyConfigScreen.classList.remove('hidden');
+    awaitingBind = null;
+    renderKeyConfig();
+  });
+  document.getElementById('btnBackFromKeys').addEventListener('click', ()=>{
+    awaitingBind = null;
+    keyConfigScreen.classList.add('hidden');
+    if(keyConfigReturnTo === 'pause'){
+      document.getElementById('pauseScreen').classList.remove('hidden');
+    } else {
+      startScreen.classList.remove('hidden');
+    }
+  });
+  document.getElementById('btnResetKeys').addEventListener('click', ()=>{
+    p1Bindings = Object.assign({}, DEFAULT_P1_BINDINGS);
+    p2Bindings = Object.assign({}, DEFAULT_P2_BINDINGS);
+    saveBindings('p1', p1Bindings);
+    saveBindings('p2', p2Bindings);
+    awaitingBind = null;
+    renderKeyConfig();
+    updateLegend();
   });
   document.getElementById('btnPauseToggle').addEventListener('click', ()=>{ togglePause(); });
   document.getElementById('btnResume').addEventListener('click', ()=>{ togglePause(); });
   document.getElementById('btnPauseMenu').addEventListener('click', ()=>{
-    document.getElementById('pauseScreen').classList.add('hidden');
-    hideAllOverlays();
-    gameState = 'start';
-    startScreen.classList.remove('hidden');
+    showConfirm('메뉴로 돌아가시겠어요?', '지금까지의 진행 상황이 사라집니다.', ()=>{
+      document.getElementById('pauseScreen').classList.add('hidden');
+      hideAllOverlays();
+      gameState = 'start';
+      startScreen.classList.remove('hidden');
+    });
   });
   window.addEventListener('keydown', (e)=>{
-    if(e.code==='Escape'){ togglePause(); }
+    if(awaitingBind) return;
+    if(e.code==='Escape'){
+      if(!keyConfigScreen.classList.contains('hidden')){
+        document.getElementById('btnBackFromKeys').click();
+      } else {
+        togglePause();
+      }
+    }
   });
-  document.getElementById('btnCopyRoomCode').addEventListener('click', ()=>{
-    const code = document.getElementById('roomCodeDisplay').textContent;
-    if(!code) return;
-    const btn = document.getElementById('btnCopyRoomCode');
-    const done = ()=>{ const old=btn.textContent; btn.textContent='복사됨!'; setTimeout(()=>{ btn.textContent=old; }, 1500); };
+  function copyTextToClipboard(text, btn){
+    const old = btn.textContent;
+    const done = ()=>{ btn.textContent='복사됨!'; setTimeout(()=>{ btn.textContent=old; }, 1500); };
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(code).then(done).catch(done);
+      navigator.clipboard.writeText(text).then(done).catch(done);
     } else {
       try{
         const ta = document.createElement('textarea');
-        ta.value = code; document.body.appendChild(ta); ta.select();
+        ta.value = text; document.body.appendChild(ta); ta.select();
         document.execCommand('copy'); document.body.removeChild(ta);
       }catch(e){}
       done();
     }
+  }
+  document.getElementById('btnCopyRoomCode').addEventListener('click', ()=>{
+    const code = document.getElementById('roomCodeDisplay').textContent;
+    if(!code) return;
+    copyTextToClipboard(code, document.getElementById('btnCopyRoomCode'));
+  });
+  document.getElementById('btnCopyResultText').addEventListener('click', ()=>{
+    const text = `${overTitle.textContent}\n${overDesc.textContent}\n`+
+      buildOverStatsLines().join('\n') + `\n`+
+      `- BOMBERMAN WEB EDITION`;
+    copyTextToClipboard(text, document.getElementById('btnCopyResultText'));
+  });
+  document.getElementById('btnSaveResultImg').addEventListener('click', ()=>{
+    const w=440, h=280;
+    const rc = document.createElement('canvas'); rc.width=w; rc.height=h;
+    const rctx = rc.getContext('2d');
+    const grad = rctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#2a1c40'); grad.addColorStop(1,'#0d0a14');
+    rctx.fillStyle = grad; rctx.fillRect(0,0,w,h);
+    rctx.strokeStyle = '#ffcc33'; rctx.lineWidth = 4;
+    rctx.strokeRect(6,6,w-12,h-12);
+    rctx.textAlign = 'center';
+    rctx.fillStyle = '#ffcc33';
+    rctx.font = 'bold 20px monospace';
+    rctx.fillText('BOMBERMAN', w/2, 46);
+    rctx.font = '10px monospace';
+    rctx.fillStyle = '#b9a6e0';
+    rctx.fillText('WEB EDITION', w/2, 62);
+    rctx.font = 'bold 13px monospace';
+    rctx.fillStyle = '#f4eefc';
+    rctx.fillText(overTitle.textContent, w/2, 100);
+    rctx.font = '9px monospace';
+    rctx.fillStyle = '#cfc2e8';
+    rctx.fillText(overDesc.textContent, w/2, 122);
+    rctx.textAlign = 'left';
+    rctx.font = '12px monospace';
+    rctx.fillStyle = '#fff4d6';
+    const lines = buildOverStatsLines();
+    lines.forEach((l,i)=>{ rctx.fillText(l, 46, 162+i*30); });
+    rctx.textAlign = 'center';
+    rctx.font = '8px monospace';
+    rctx.fillStyle = '#6b5a94';
+    rctx.fillText('made by m00n', w/2, h-16);
+    try{
+      const url = rc.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url; a.download = 'bomberman-result.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }catch(e){ alert('이미지 저장에 실패했습니다.'); }
   });
   updateBestStageDisplay();
 
