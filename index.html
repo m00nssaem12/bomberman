@@ -90,6 +90,13 @@
     flex-wrap:wrap; justify-content:center; max-width:640px; text-align:left;
   }
   #legend b{ color:var(--gold); }
+  .nickname-input{
+    font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    font-size:13px; padding:8px 10px; width:150px;
+    background:#1c1229; border:2px solid #4b3670; color:#fff4d6; border-radius:4px;
+    text-align:center; outline:none;
+  }
+  .nickname-input:focus{ border-color:var(--gold); }
   .key{ display:inline-block; background:#1c1229; border:1px solid #4b3670; border-radius:3px; padding:2px 6px; margin:0 2px; color:#fff4d6; font-size:0.95em; }
   #startExplain{
     font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
@@ -243,7 +250,7 @@
   <div id="stage">
     <div id="hud">
       <div class="hud-box p1" id="p1Box">
-        <div class="hud-name"><span class="dot" id="p1Dot"></span>PLAYER 1</div>
+        <div class="hud-name"><span class="dot" id="p1Dot"></span><span id="p1Label">PLAYER 1</span></div>
         <div id="p1-stats">BOMB 1  RANGE 1  SPD 0</div>
       </div>
       <div class="hud-mid" id="hudMid">모드를 선택하세요</div>
@@ -254,11 +261,11 @@
     </div>
     <div id="hudExtraRow" class="hidden" style="display:flex; gap:12px; justify-content:center; margin-bottom:10px;">
       <div class="hud-box hidden" id="p3Box">
-        <div class="hud-name"><span class="dot" id="p3Dot"></span><span>PLAYER 3</span></div>
+        <div class="hud-name"><span class="dot" id="p3Dot"></span><span id="p3Label">PLAYER 3</span></div>
         <div id="p3-stats">BOMB 1  RANGE 1  SPD 0</div>
       </div>
       <div class="hud-box hidden" id="p4Box">
-        <div class="hud-name"><span class="dot" id="p4Dot"></span><span>PLAYER 4</span></div>
+        <div class="hud-name"><span class="dot" id="p4Dot"></span><span id="p4Label">PLAYER 4</span></div>
         <div id="p4-stats">BOMB 1  RANGE 1  SPD 0</div>
       </div>
     </div>
@@ -316,6 +323,10 @@
         </svg>
         <h2>모드를 선택하세요</h2>
         <p>미로를 돌아다니며 폭탄으로 벽을 부수고 상대를 쓰러뜨리세요!<br>부서진 벽에서 가끔 아이템이 나옵니다.</p>
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin:2px 0 4px;">
+          <label for="nicknameInput" style="font-size:12px; color:#c6b8e8;">닉네임</label>
+          <input id="nicknameInput" type="text" maxlength="8" placeholder="PLAYER" class="nickname-input" autocomplete="off">
+        </div>
         <div id="startExplain" style="max-width:460px; text-align:left; border:1px solid #4b3670; border-radius:6px; padding:16px 20px;">
           <p style="margin:0 0 10px; color:var(--gold); font-size:15px; letter-spacing:0.5px;"><b>📖 게임 방법</b></p>
           <p>🎯 목표: 폭탄으로 미로 벽을 부수며 상대(또는 AI)를 모두 제거하세요.</p>
@@ -558,11 +569,11 @@
       if(snap.val()!==true || !roomCode || !onlineRole) return;
       if(onlineRole==='host'){
         const ref = fbDb.ref(roomPath(roomCode,'players/p1'));
-        ref.update({connected:true, skin:onlineSkin});
+        ref.update({connected:true, skin:onlineSkin, name:getMyNickname('PLAYER 1')});
         ref.onDisconnect().update({connected:false});
       } else if(onlineRole==='guest' && onlineMySlot){
         const ref = fbDb.ref(roomPath(roomCode,'players/p'+onlineMySlot));
-        ref.update({connected:true, skin:onlineSkin});
+        ref.update({connected:true, skin:onlineSkin, name:getMyNickname('PLAYER '+onlineMySlot)});
         ref.onDisconnect().update({connected:false});
       }
     });
@@ -619,6 +630,16 @@
   let onlineSelectedSizeKey = 'medium';
   let onlineSelectedThemeIdx = 0;
   let onlineSkin = 'blue';
+  let myNickname = '';
+  try{ myNickname = localStorage.getItem('bomberman_nickname') || ''; }catch(e){}
+  function sanitizeNickname(raw){
+    return (raw||'').replace(/\s+/g,' ').trim().slice(0,8);
+  }
+  function getMyNickname(fallback){
+    const n = sanitizeNickname(myNickname);
+    return n || (fallback||'PLAYER');
+  }
+  let remoteNames = {2:'PLAYER 2', 3:'PLAYER 3', 4:'PLAYER 4'};
   let hostBroadcastTimer = null;
   let guestInputTimer = null;
   let lastSentInput = null;
@@ -691,7 +712,7 @@
       status:'waiting',
       createdAt: Date.now(),
       maxPlayers: onlineMaxPlayers,
-      players:{ p1:{skin:onlineSkin, connected:true}, p2:null, p3:null, p4:null },
+      players:{ p1:{skin:onlineSkin, name:getMyNickname('PLAYER 1'), connected:true}, p2:null, p3:null, p4:null },
     }).then(()=>{
       if(settled) return; // 이미 타임아웃으로 실패 처리된 경우엔 무시
       settled = true;
@@ -739,7 +760,7 @@
       rosterCache = {};
       hostConnectedForGuestView = true;
       const myRef = fbDb.ref(roomPath(code,'players/p'+targetSlot));
-      myRef.set({skin:onlineSkin, connected:true});
+      myRef.set({skin:onlineSkin, name:getMyNickname('PLAYER '+targetSlot), connected:true});
       myRef.onDisconnect().update({connected:false});
       attachGuestListeners(code);
       attachRosterListener(code);
@@ -1057,12 +1078,13 @@
       const val = snap.val() || {};
       for(let s=1;s<=4;s++){
         const d = val['p'+s];
-        rosterCache[s] = d ? {connected:!!d.connected, skin:d.skin||null} : {connected:false, skin:null};
+        rosterCache[s] = d ? {connected:!!d.connected, skin:d.skin||null, name:d.name||null} : {connected:false, skin:null, name:null};
       }
       if(onlineRole==='host'){
         for(let s=2;s<=4;s++){
           guestConnectedSlots[s] = rosterCache[s].connected;
           if(rosterCache[s].skin) remoteSkins[s] = rosterCache[s].skin;
+          if(rosterCache[s].name) remoteNames[s] = rosterCache[s].name;
         }
         updatePingDisplay(); // 접속 상태가 바뀌면 핑 목록도 즉시 갱신
         updateMultiplayerDisconnectBanner(); // 완전히 나간 플레이어는 불안정 배너에서도 즉시 제외
@@ -1134,8 +1156,9 @@
     updateOnlineLobbyStatus();
   }
   function slotLabel(s){
-    if(s===1) return 'PLAYER 1' + (onlineRole==='host' ? ' (방장, 나)' : ' (방장)');
-    return 'PLAYER '+s + (onlineRole==='guest' && s===onlineMySlot ? ' (나)' : '');
+    const nm = (rosterCache[s] && rosterCache[s].name) ? rosterCache[s].name : ('PLAYER '+s);
+    if(s===1) return nm + (onlineRole==='host' ? ' (방장, 나)' : ' (방장)');
+    return nm + (onlineRole==='guest' && s===onlineMySlot ? ' (나)' : '');
   }
   function renderOnlineRoster(){
     const wrap = document.getElementById('onlineRoster');
@@ -1251,7 +1274,9 @@
       const [gx,gy] = cornerForSlot(slot);
       const skinKey = slot===1 ? onlineSkin : remoteSkins[slot];
       const controls = slot===1 ? hostControls : remoteControls;
-      return makePlayer(slot-1, gx, gy, controls, skinKey);
+      const p = makePlayer(slot-1, gx, gy, controls, skinKey);
+      p.name = slot===1 ? getMyNickname('PLAYER 1') : (remoteNames[slot] || ('PLAYER '+slot));
+      return p;
     });
     enemies = [];
     tpad2.style.display = 'none'; tbomb2.style.display = 'none';
@@ -1275,7 +1300,7 @@
     for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++) flatPU.push(powerUps[y][x] || '');
     const bombsOut = bombs.map(b=>({x:b.x,y:b.y,px:b.px,py:b.py,timer:b.timer,range:b.range,kicked:!!b.kicked}));
     const explosionsOut = explosions.map(e=>({x:e.x,y:e.y,type:e.type,timeLeft:e.timeLeft}));
-    const playersOut = players.map(p=>({px:p.px,py:p.py,dir:p.dir,moving:!!p.moving,alive:!!p.alive,lives:p.lives,maxBombs:p.maxBombs,range:p.range,speedLv:p.speedLv,canKick:!!p.canKick,pierce:!!p.pierce,shield:!!p.shield,invulnT:p.invulnT,skin:p.skin,animT:p.animT}));
+    const playersOut = players.map(p=>({px:p.px,py:p.py,dir:p.dir,moving:!!p.moving,alive:!!p.alive,lives:p.lives,maxBombs:p.maxBombs,range:p.range,speedLv:p.speedLv,canKick:!!p.canKick,pierce:!!p.pierce,shield:!!p.shield,invulnT:p.invulnT,skin:p.skin,animT:p.animT,name:p.name}));
     return {
       cols:COLS, rows:ROWS, tile:TILE, themeIdx: currentThemeIdx,
       g: flatGrid, pu: flatPU,
@@ -1358,7 +1383,6 @@
       if(gameState!=='playing'){
         // 재대결 등으로 게임이 다시 시작된 경우, 게임 종료 화면을 닫고 플레이 화면으로 복귀
         hideAllOverlays();
-        p2Label.textContent = 'PLAYER 2';
         p2Box.classList.remove('p1'); p2Box.classList.add('p2');
         tpad2.style.display = 'none'; tbomb2.style.display = 'none';
         updateLegend();
@@ -1373,7 +1397,6 @@
     applyDimensions('medium');
     gameState = 'playing';
     hideAllOverlays();
-    p2Label.textContent = 'PLAYER 2';
     p2Box.classList.remove('p1'); p2Box.classList.add('p2');
     tpad2.style.display = 'none'; tbomb2.style.display = 'none';
     updateLegend();
@@ -1680,6 +1703,7 @@
   const hudMid = document.getElementById('hudMid');
   const p1Stats = document.getElementById('p1-stats');
   const p2Stats = document.getElementById('p2-stats');
+  const p1Label = document.getElementById('p1Label');
   const p2Label = document.getElementById('p2Label');
   const p2Box = document.getElementById('p2Box');
   const tpad2 = document.getElementById('tpad2');
@@ -2934,10 +2958,11 @@
     const p1Dot = document.getElementById('p1Dot');
     const p2Dot = document.getElementById('p2Dot');
     const extraRow = document.getElementById('hudExtraRow');
+    p1Label.textContent = onlineMode ? (p1.name || 'PLAYER 1') : getMyNickname('PLAYER 1');
     if(mode==='2p'){
       const p2 = players[1];
       if(p2){
-        p2Label.textContent = 'PLAYER 2';
+        p2Label.textContent = onlineMode ? (p2.name || 'PLAYER 2') : 'PLAYER 2';
         p2Stats.innerHTML = playerStatsHtml(p2);
       }
       if(onlineMode){
@@ -2951,10 +2976,12 @@
             const box = document.getElementById('p'+n+'Box');
             const dot = document.getElementById('p'+n+'Dot');
             const statsEl = document.getElementById('p'+n+'-stats');
+            const labelEl = document.getElementById('p'+n+'Label');
             if(p){
               box.classList.remove('hidden');
               statsEl.innerHTML = playerStatsHtml(p);
               applyBoxColor(box, dot, p.skin);
+              if(labelEl) labelEl.textContent = p.name || ('PLAYER '+n);
             } else {
               box.classList.add('hidden');
             }
@@ -3240,6 +3267,20 @@
     gameState = 'start';
   });
   document.getElementById('btnCreateRoom').addEventListener('click', ()=>{ ensureAudio(); createRoom(); });
+  {
+    const nickInput = document.getElementById('nicknameInput');
+    if(nickInput){
+      nickInput.value = myNickname;
+      nickInput.addEventListener('input', ()=>{
+        myNickname = sanitizeNickname(nickInput.value);
+        try{ localStorage.setItem('bomberman_nickname', myNickname); }catch(e){}
+        if(fbDb && roomCode && onlineRole){
+          const slot = onlineRole==='host' ? 1 : onlineMySlot;
+          if(slot) fbDb.ref(roomPath(roomCode, 'players/p'+slot+'/name')).set(getMyNickname('PLAYER '+slot));
+        }
+      });
+    }
+  }
   document.getElementById('btnShowJoin').addEventListener('click', ()=>{
     document.getElementById('joinRow').classList.remove('hidden');
   });
