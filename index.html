@@ -67,7 +67,10 @@
   .overlay.hidden{display:none;}
   .hidden{display:none !important;}
   .overlay h2{ font-size:18px; color:var(--gold); margin:0 0 4px; text-shadow:2px 2px 0 #6b3d00; }
-  .overlay p{ font-size:9px; line-height:1.8; color:#cfc2e8; margin:0; max-width:400px;}
+  .overlay p{
+    font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    font-size:12px; line-height:1.85; color:#e7ddf7; margin:0; max-width:420px;
+  }
   .btn{
     font-family:'Press Start 2P', monospace; font-size:11px; padding:12px 18px;
     background:linear-gradient(#3a2a54,#241733); border:2px solid var(--gold); color:#fff4d6;
@@ -87,7 +90,15 @@
     flex-wrap:wrap; justify-content:center; max-width:600px; text-align:left;
   }
   #legend b{ color:var(--gold); }
-  #legend .key{ display:inline-block; background:#1c1229; border:1px solid #4b3670; border-radius:3px; padding:1px 5px; margin:0 1px; }
+  .key{ display:inline-block; background:#1c1229; border:1px solid #4b3670; border-radius:3px; padding:2px 6px; margin:0 2px; color:#fff4d6; font-size:0.95em; }
+  #startExplain{
+    font-family:'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+    font-size:13.5px !important; line-height:1.85 !important; color:#efe6ff !important;
+    background:rgba(255,255,255,0.07) !important;
+  }
+  #startExplain p{ margin:0 0 8px !important; }
+  #startExplain p:last-child{ margin-bottom:0 !important; }
+  #startExplain p b{ color:var(--gold); font-size:1.05em; }
   .power-legend{ display:flex; align-items:center; gap:5px; }
   .swatch{width:15px;height:15px; border-radius:3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; font-size:8px; font-weight:bold; color:#1a1a1a; text-shadow:none;}
   .item-cols{ display:flex; gap:16px; }
@@ -180,6 +191,48 @@
     text-transform:uppercase; text-align:center; border-radius:4px;
     border:2px solid #4b3670; background:#1c1229; color:#fff4d6;
   }
+  /* ---- 핑 표시 ---- */
+  #pingBadge{ position:fixed; top:8px; right:8px; z-index:49; transition:opacity .2s, transform .2s; }
+  /* 모바일(터치 기기)에서는 터치 설정 기어 버튼(우상단)과 겹치지 않도록 반대쪽으로 옮긴다 */
+  @media (pointer: coarse){ #pingBadge{ left:8px; right:auto; } }
+  #pingBadgeInner{ display:flex; align-items:flex-start; gap:5px; }
+  #pingList{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+  #pingToggleBtn{
+    background:transparent; border:none; color:#d8c9f0; font-size:9px; line-height:1;
+    cursor:pointer; padding:1px 0 0 1px; opacity:.65; flex-shrink:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #pingToggleBtn:hover, #pingToggleBtn:active{ opacity:1; }
+  .ping-row{ display:flex; align-items:center; gap:5px; white-space:nowrap; transition:opacity .2s; }
+  .ping-row .ping-label{ opacity:.7; min-width:16px; font-size:8px; }
+  .ping-row .ping-val{ font-variant-numeric:tabular-nums; min-width:22px; text-align:right; display:inline-block; }
+  .ping-row .ping-unit{ opacity:.6; font-size:8px; }
+  .ping-row .ping-count{ opacity:.55; font-size:8px; margin-left:1px; }
+  .ping-bars{ display:inline-flex; align-items:flex-end; gap:1.5px; height:9px; flex-shrink:0; }
+  .ping-bars i{ display:block; width:2.5px; border-radius:1px; background:#4a3f66; }
+  .ping-bars i:nth-child(1){ height:3px; }
+  .ping-bars i:nth-child(2){ height:5px; }
+  .ping-bars i:nth-child(3){ height:7px; }
+  .ping-bars i:nth-child(4){ height:9px; }
+  .ping-good .ping-bars i{ background:#3ecf6a; }
+  .ping-good .ping-val{ color:#3ecf6a; }
+  .ping-mid .ping-bars i:nth-child(-n+3){ background:#ffcc33; }
+  .ping-mid .ping-val{ color:#ffcc33; }
+  .ping-bad .ping-bars i:nth-child(-n+1){ background:#ff5577; }
+  .ping-bad .ping-val{ color:#ff5577; }
+  .ping-stale{ opacity:.45; }
+  .ping-stale .ping-val{ color:#d8c9f0; }
+  @keyframes pingUpdatePulse{ 0%{ transform:scale(1); } 45%{ transform:scale(1.18); } 100%{ transform:scale(1); } }
+  .ping-pulse{ animation: pingUpdatePulse .28s ease; }
+  /* 나쁨(빨강) 상태가 일정 시간 이상 지속될 때만 흔들어서 경고감을 준다 (한번 튄 값에는 반응하지 않음) */
+  @keyframes pingWarnShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-2px); }
+    40%{ transform:translateX(2px); }
+    60%{ transform:translateX(-1px); }
+    80%{ transform:translateX(1px); }
+  }
+  .ping-warn{ animation: pingWarnShake .5s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -263,13 +316,13 @@
         </svg>
         <h2>모드를 선택하세요</h2>
         <p>미로를 돌아다니며 폭탄으로 벽을 부수고 상대를 쓰러뜨리세요!<br>부서진 벽에서 가끔 아이템이 나옵니다.</p>
-        <div id="startExplain" style="font-size:9px; line-height:1.9; color:#cfc2e8; max-width:420px; text-align:left; background:rgba(255,255,255,0.04); border:1px solid #4b3670; border-radius:6px; padding:12px 16px;">
-          <p style="margin:0 0 6px; color:var(--gold); font-size:10px;"><b>📖 게임 방법</b></p>
-          <p style="margin:0 0 4px;">🎯 목표: 폭탄으로 미로 벽을 부수며 상대(또는 AI)를 모두 제거하세요.</p>
-          <p style="margin:0 0 4px;">🎮 조작 (1P): 이동 <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> &nbsp;폭탄 <span class="key">SPACE</span></p>
-          <p style="margin:0 0 4px;">🎮 조작 (2P): 이동 <span class="key">방향키</span> &nbsp;폭탄 <span class="key">ENTER</span></p>
-          <p style="margin:0 0 4px;">💡 자신이 설치한 폭탄에도 맞으면 목숨이 줄어드니 주의하세요!</p>
-          <p style="margin:0;">✨ 부서진 벽에서 나오는 아이템으로 폭탄 개수·범위·속도·생명·차기·관통·보호막을 얻을 수 있어요.</p>
+        <div id="startExplain" style="max-width:460px; text-align:left; border:1px solid #4b3670; border-radius:6px; padding:16px 20px;">
+          <p style="margin:0 0 10px; color:var(--gold); font-size:15px; letter-spacing:0.5px;"><b>📖 게임 방법</b></p>
+          <p>🎯 목표: 폭탄으로 미로 벽을 부수며 상대(또는 AI)를 모두 제거하세요.</p>
+          <p>🎮 조작 (1P): 이동 <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> &nbsp;폭탄 <span class="key">SPACE</span></p>
+          <p>🎮 조작 (2P): 이동 <span class="key">방향키</span> &nbsp;폭탄 <span class="key">ENTER</span></p>
+          <p>💡 자신이 설치한 폭탄에도 맞으면 목숨이 줄어드니 주의하세요!</p>
+          <p>✨ 부서진 벽에서 나오는 아이템으로 폭탄 개수·범위·속도·생명·차기·관통·보호막을 얻을 수 있어요.</p>
         </div>
         <p id="bestStageText" style="font-size:11px; color:var(--gold); display:none;"></p>
         <div class="mode-row">
@@ -394,8 +447,15 @@
     <button class="btn secondary" id="btnManualReconnect" style="margin-top:6px; font-size:10px; padding:6px 10px;">지금 재연결 시도</button>
   </div>
 
-  <div id="pingBadge" class="hidden" style="position:fixed; top:8px; right:8px; background:rgba(20,10,30,0.85); border:2px solid #3a2a54; border-radius:6px; padding:5px 9px; font-size:9px; color:#d8c9f0; z-index:49; letter-spacing:1px;">
-    핑 <span id="pingValue">--</span>ms
+  <div id="multiDisconnectBanner" class="hidden" style="position:fixed; top:8px; left:50%; transform:translateX(-50%); background:rgba(40,10,50,0.92); border:2px solid #ff5577; border-radius:8px; padding:8px 14px; font-size:9px; color:#ffd9df; z-index:48; text-align:center; letter-spacing:0.5px; max-width:88vw;">
+    <span id="multiDisconnectMsg"></span>
+  </div>
+
+  <div id="pingBadge" class="hidden" style="background:rgba(20,10,30,0.85); border:2px solid #3a2a54; border-radius:6px; padding:6px 9px; font-size:9px; color:#d8c9f0; letter-spacing:0.5px;">
+    <div id="pingBadgeInner">
+      <div id="pingList"></div>
+      <button id="pingToggleBtn" class="hidden" title="핑 목록 펼치기/접기" aria-label="핑 목록 펼치기/접기">▾</button>
+    </div>
   </div>
 
   <div id="legend">
@@ -580,7 +640,15 @@
   let hostConnectedForGuestView = true;
   // 핑(왕복 지연시간) 측정용
   let pingIntervalTimer = null;
+  let pingUiRefreshTimer = null;
   let currentPingMs = null;
+  let lastPingReceivedAt = null; // 게스트: 내 핑값을 마지막으로 갱신받은 시각
+  let hostPingMap = {}; // 호스트: { 2:{ms, updatedAt}, 3:{...}, 4:{...} } 각 게스트의 핑 보고 기록
+  const PING_STALE_MS = 6000; // 이 시간 동안 갱신이 없으면 "끊김/오래됨"으로 표시 (전송 주기 2초의 3배)
+  const PING_WARN_MS = 3000; // 나쁨(빨강) 상태가 이만큼 지속되면 흔들림으로 경고
+  let pingCollapsed = true; // 접힘(요약) 상태 기본값 - 특히 호스트 3~4인전에서 여러 줄이 계속 떠 있지 않도록
+  try{ pingCollapsed = localStorage.getItem('bomberman_ping_collapsed') !== '0'; }catch(e){}
+  let pingBadSinceMap = {}; // 각 플레이어별로 "나쁨" 상태가 시작된 시각 (경고 흔들림 판단용)
   let manualReconnectBusy = false;
 
   function genRoomCode(){
@@ -701,55 +769,199 @@
   // 정확한 왕복시간(RTT)을 잴 수 있다.
   function startPingMonitor(){
     if(!fbDb || !roomCode || !onlineRole) return;
+    if(pingUiRefreshTimer) clearInterval(pingUiRefreshTimer);
+    // 새 데이터가 없어도 오래된(stale) 값은 주기적으로 다시 검사해 화면 갱신 + 재접속 감지에 반영한다
+    pingUiRefreshTimer = setInterval(()=>{ updatePingDisplay(); checkPingBasedDisconnection(); }, 1000);
     if(onlineRole==='host'){
-      // 호스트는 상대가 여럿일 수 있어 하나의 숫자로 표시하지 않고, 각 게스트의 ping을 그대로 되돌려주기만 한다.
-      document.getElementById('pingBadge').classList.add('hidden');
+      // 호스트는 상대가 여럿일 수 있으므로, 각 게스트의 ping을 그대로 되돌려주는 동시에
+      // 게스트가 계산해 보고해오는 왕복시간(pingReport)을 모아 자신도 목록으로 표시한다.
+      hostPingMap = {};
       for(let s=2;s<=4;s++){
         fbDb.ref(roomPath(roomCode,'ping/p'+s)).on('value', snap=>{
           const v = snap.val();
           if(v==null || !fbDb || !roomCode) return;
           fbDb.ref(roomPath(roomCode,'pingEcho/p'+s)).set(v);
         });
+        fbDb.ref(roomPath(roomCode,'pingReport/p'+s)).on('value', snap=>{
+          const v = snap.val();
+          if(v==null) return;
+          hostPingMap[s] = { ms: v, updatedAt: Date.now() };
+          updatePingDisplay(true);
+          checkPingBasedDisconnection();
+        });
       }
+      updatePingDisplay();
       return;
     }
     const myRole = 'p'+onlineMySlot;
-    document.getElementById('pingBadge').classList.remove('hidden');
-    // 내가 보낸 ping이 돌아오면 왕복시간을 계산한다
+    // 내가 보낸 ping이 돌아오면 왕복시간을 계산하고, 그 값을 호스트도 볼 수 있도록 보고한다
     fbDb.ref(roomPath(roomCode,'pingEcho/'+myRole)).on('value', snap=>{
       const v = snap.val();
       if(v==null) return;
       const rtt = Date.now() - v;
-      if(rtt>=0 && rtt<20000){ currentPingMs = rtt; updatePingDisplay(); }
+      if(rtt>=0 && rtt<20000){
+        currentPingMs = rtt;
+        lastPingReceivedAt = Date.now();
+        updatePingDisplay(true);
+        checkPingBasedDisconnection();
+        if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'pingReport/'+myRole)).set(Math.round(rtt));
+      }
     });
     if(pingIntervalTimer) clearInterval(pingIntervalTimer);
     const sendPing = ()=>{ if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'ping/'+myRole)).set(Date.now()); };
     sendPing();
     pingIntervalTimer = setInterval(sendPing, 2000);
+    updatePingDisplay();
+  }
+  // 핑 하트비트가 일정 시간 끊기면(=stale) 기존 재접속 유예 타이머/배너를 조기에 띄운다.
+  // Firebase의 onDisconnect는 소켓이 실제로 끊어져야 발동해 반응이 늦을 수 있는데,
+  // 2초마다 오가는 핑이 멈추는 건 그보다 훨씬 빠르고 촘촘한 신호라 이걸로 먼저 감지한다.
+  // (roster의 connected 플래그 기반 감지는 그대로 살아있고, 이건 추가 안전장치로 병행 동작)
+  function checkPingBasedDisconnection(){
+    const now = Date.now();
+    if(onlineRole==='host'){
+      // 기존 유예 타이머(매치 종료로 이어짐)는 2인 대전(슬롯2 고정)에서만 그대로 사용한다.
+      if(onlineMode && gameState==='playing' && onlineMaxPlayers===2 && guestConnected){
+        const rec = hostPingMap[2];
+        const stale = !rec || (now - rec.updatedAt > PING_STALE_MS);
+        if(stale) startGuestDisconnectGraceTimer();
+        else cancelGuestDisconnectGraceTimer();
+      }
+      // 3~4인 대전은 한 명이 불안정해도 매치를 끝내지 않으므로, 매치 종료 없이
+      // "이 플레이어 연결이 불안정하다"는 정보만 배너로 알려준다.
+      if(onlineMaxPlayers>2) updateMultiplayerDisconnectBanner();
+    } else if(onlineRole==='guest'){
+      if(onlineMode && gameState==='playing' && hostConnectedForGuestView){
+        const stale = currentPingMs==null || lastPingReceivedAt==null || (now - lastPingReceivedAt > PING_STALE_MS);
+        if(stale) startHostDisconnectGraceTimer();
+        else cancelHostDisconnectGraceTimer();
+      }
+    }
+  }
+  // 3~4인 대전에서 게스트별 연결 불안정 상태를 이름과 함께 알려주는 안내 배너.
+  // 2인 대전의 재접속 배너와 달리 유예 타이머로 매치를 끝내지 않고, 상태가 바뀔 때마다 그저 갱신/숨김만 한다.
+  function updateMultiplayerDisconnectBanner(){
+    const banner = document.getElementById('multiDisconnectBanner');
+    const msgEl = document.getElementById('multiDisconnectMsg');
+    if(!banner || !msgEl) return;
+    if(!onlineMode || onlineRole!=='host' || onlineMaxPlayers<=2 || gameState!=='playing'){
+      banner.classList.add('hidden');
+      return;
+    }
+    const now = Date.now();
+    const staleLabels = [];
+    for(let s=2;s<=onlineMaxPlayers;s++){
+      if(!guestConnectedSlots || !guestConnectedSlots[s]) continue; // 이미 완전히 나간 플레이어는 목록/핑에서 빠지므로 제외
+      const rec = hostPingMap[s];
+      const stale = !rec || (now - rec.updatedAt > PING_STALE_MS);
+      if(stale) staleLabels.push('P'+s);
+    }
+    if(!staleLabels.length){ banner.classList.add('hidden'); return; }
+    msgEl.textContent = staleLabels.join(', ') + ' 연결이 불안정합니다. 재연결을 기다리는 중...';
+    banner.classList.remove('hidden');
   }
   function stopPingMonitor(){
     if(pingIntervalTimer){ clearInterval(pingIntervalTimer); pingIntervalTimer=null; }
+    if(pingUiRefreshTimer){ clearInterval(pingUiRefreshTimer); pingUiRefreshTimer=null; }
     currentPingMs = null;
+    lastPingReceivedAt = null;
+    hostPingMap = {};
+    pingBadSinceMap = {};
     document.getElementById('pingBadge').classList.add('hidden');
+    const mdBanner = document.getElementById('multiDisconnectBanner');
+    if(mdBanner) mdBanner.classList.add('hidden');
+    const list = document.getElementById('pingList');
+    if(list) list.innerHTML = '';
     try{
       if(fbDb && roomCode){
         for(let s=2;s<=4;s++){
           fbDb.ref(roomPath(roomCode,'ping/p'+s)).off();
           fbDb.ref(roomPath(roomCode,'pingEcho/p'+s)).off();
+          fbDb.ref(roomPath(roomCode,'pingReport/p'+s)).off();
+        }
+        if(onlineMySlot){
+          fbDb.ref(roomPath(roomCode,'pingEcho/p'+onlineMySlot)).off();
         }
       }
     }catch(e){}
   }
-  function updatePingDisplay(){
-    const el = document.getElementById('pingValue');
-    if(!el) return;
-    if(currentPingMs==null){ el.textContent = '--'; return; }
-    el.textContent = Math.round(currentPingMs);
+  // 핑 값 하나를 배지의 한 줄(막대 아이콘 + 라벨 + 숫자)로 그려낸다
+  function pingRowHtml(label, ms, stale, warn, countSuffix){
+    let cls = 'ping-row';
+    let valText = '--';
+    if(stale || ms==null){
+      cls += ' ping-stale';
+    } else {
+      valText = Math.round(ms);
+      if(ms < 120) cls += ' ping-good';
+      else if(ms < 300) cls += ' ping-mid';
+      else cls += ' ping-bad';
+    }
+    if(warn) cls += ' ping-warn';
+    const labelHtml = label ? `<span class="ping-label">${label}</span>` : '';
+    const countHtml = countSuffix ? `<span class="ping-count">외 ${countSuffix - 1}</span>` : '';
+    return `<div class="${cls}"><span class="ping-bars"><i></i><i></i><i></i><i></i></span>${labelHtml}<span class="ping-val">${valText}</span><span class="ping-unit">ms</span>${countHtml}</div>`;
+  }
+  // pulse: true면 방금 새 값을 받은 순간이라는 뜻으로, 살짝 튀는 애니메이션을 준다
+  function updatePingDisplay(pulse){
     const badge = document.getElementById('pingBadge');
-    // 지연 정도에 따라 색으로도 한눈에 보이게
-    if(currentPingMs < 120) badge.style.borderColor = '#3ecf6a';
-    else if(currentPingMs < 300) badge.style.borderColor = '#ffcc33';
-    else badge.style.borderColor = '#ff5577';
+    const list = document.getElementById('pingList');
+    const toggleBtn = document.getElementById('pingToggleBtn');
+    if(!badge || !list) return;
+    const now = Date.now();
+    // 1) 표시할 항목들을 먼저 모은다 (호스트는 접속 중인 게스트별로, 게스트는 자기 자신 하나)
+    let rows = []; // { key, label, ms, stale }
+    if(onlineRole === 'host'){
+      const maxP = onlineMaxPlayers || 4;
+      for(let s=2;s<=maxP;s++){
+        if(!guestConnectedSlots || !guestConnectedSlots[s]) continue;
+        const rec = hostPingMap[s];
+        const stale = !rec || (now - rec.updatedAt > PING_STALE_MS);
+        rows.push({ key:'p'+s, label:'P'+s, ms: rec ? rec.ms : null, stale });
+      }
+    } else if(onlineRole === 'guest'){
+      const stale = currentPingMs==null || lastPingReceivedAt==null || (now - lastPingReceivedAt > PING_STALE_MS);
+      rows.push({ key:'self', label:'', ms: currentPingMs, stale });
+    }
+    if(!rows.length){
+      badge.classList.add('hidden'); list.innerHTML=''; if(toggleBtn) toggleBtn.classList.add('hidden');
+      return;
+    }
+    // 2) 각 항목별로 "나쁨(빨강)" 상태가 얼마나 지속됐는지 추적해 경고 흔들림 여부를 정한다
+    const activeKeys = new Set();
+    rows.forEach(r=>{
+      activeKeys.add(r.key);
+      const isBad = !r.stale && r.ms!=null && r.ms >= 300;
+      if(isBad){
+        if(!pingBadSinceMap[r.key]) pingBadSinceMap[r.key] = now;
+        r.warn = (now - pingBadSinceMap[r.key]) >= PING_WARN_MS;
+      } else {
+        delete pingBadSinceMap[r.key];
+        r.warn = false;
+      }
+    });
+    // 화면에서 사라진(접속 종료된) 플레이어의 기록은 정리
+    Object.keys(pingBadSinceMap).forEach(k=>{ if(!activeKeys.has(k)) delete pingBadSinceMap[k]; });
+    // 3) 접힘 상태면 가장 상태가 나쁜 한 줄만 요약해서 보여준다: 끊김/오래됨 > 나쁨 > 보통 > 좋음
+    badge.classList.remove('hidden');
+    const canCollapse = rows.length > 1;
+    if(toggleBtn){
+      toggleBtn.classList.toggle('hidden', !canCollapse);
+      toggleBtn.textContent = pingCollapsed ? '▾' : '▴';
+    }
+    let displayRows = rows;
+    if(canCollapse && pingCollapsed){
+      const rank = r => r.stale ? 3 : (r.ms>=300 ? 2 : r.ms>=120 ? 1 : 0);
+      const worst = rows.reduce((a,b)=> rank(b) > rank(a) ? b : a);
+      displayRows = [{ ...worst, countSuffix: rows.length }];
+    }
+    list.innerHTML = displayRows.map(r=> pingRowHtml(r.label, r.ms, r.stale, r.warn, r.countSuffix)).join('');
+    if(pulse){
+      badge.classList.remove('ping-pulse');
+      // 리플로우를 강제해 같은 클래스를 다시 붙여도 애니메이션이 재생되게 한다
+      void badge.offsetWidth;
+      badge.classList.add('ping-pulse');
+    }
   }
 
   // ---------- 재접속 수동 재시도 ----------
@@ -821,6 +1033,8 @@
           guestConnectedSlots[s] = rosterCache[s].connected;
           if(rosterCache[s].skin) remoteSkins[s] = rosterCache[s].skin;
         }
+        updatePingDisplay(); // 접속 상태가 바뀌면 핑 목록도 즉시 갱신
+        updateMultiplayerDisconnectBanner(); // 완전히 나간 플레이어는 불안정 배너에서도 즉시 제외
         // 기존 1:1(2인) 대전의 재접속 유예 로직은 슬롯2 기준으로 그대로 유지
         const wasConnected = guestConnected;
         guestConnected = !!rosterCache[2].connected;
@@ -1880,6 +2094,12 @@
     touchSettingsHiddenOverlay = overlaysToCheck.find(o=>o && !o.classList.contains('hidden')) || null;
     if(touchSettingsHiddenOverlay) touchSettingsHiddenOverlay.classList.add('hidden');
     document.getElementById('touchSettingsScreen').classList.remove('hidden');
+  });
+  document.getElementById('pingToggleBtn').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    pingCollapsed = !pingCollapsed;
+    try{ localStorage.setItem('bomberman_ping_collapsed', pingCollapsed ? '1' : '0'); }catch(err){}
+    updatePingDisplay();
   });
   document.getElementById('btnCloseTouchSettings').addEventListener('click', ()=>{
     if(touchPositionMode) exitPositionMode();
