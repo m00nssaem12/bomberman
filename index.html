@@ -86,8 +86,8 @@
   .bomb-spin{ width:46px;height:46px; animation:bob 1.4s ease-in-out infinite; }
   @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
   #legend{
-    margin-top:16px; display:flex; gap:22px; font-size:8px; line-height:1.9; color:#a693d1;
-    flex-wrap:wrap; justify-content:center; max-width:600px; text-align:left;
+    margin-top:16px; display:flex; gap:22px; font-size:11px; line-height:2; color:#c6b8e8;
+    flex-wrap:wrap; justify-content:center; max-width:640px; text-align:left;
   }
   #legend b{ color:var(--gold); }
   .key{ display:inline-block; background:#1c1229; border:1px solid #4b3670; border-radius:3px; padding:2px 6px; margin:0 2px; color:#fff4d6; font-size:0.95em; }
@@ -107,13 +107,13 @@
 
   .size-row{ display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; justify-content:center; }
   .size-btn{
-    font-family:'Press Start 2P', monospace; font-size:9px; padding:8px 12px;
-    background:#1c1229; border:2px solid #4b3670; color:#cfc2e8; border-radius:4px; cursor:pointer;
+    font-family:'Press Start 2P', monospace; font-size:12px; padding:10px 14px;
+    background:#1c1229; border:2px solid #4b3670; color:#e5d9f7; border-radius:4px; cursor:pointer;
   }
   .size-btn.active{ border-color:var(--gold); color:#fff4d6; background:#2e2043; }
   .size-btn.dup-warning{ border-color:#ff5a5a; color:#ffd6d6; box-shadow:0 0 0 1px #ff5a5a inset; }
 
-  .section-label{ font-size:8px; color:#a693d1; letter-spacing:1px; margin:10px 0 2px; }
+  .section-label{ font-size:11px; color:#c6b8e8; letter-spacing:1px; margin:14px 0 6px; }
   .skin-row{ display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; justify-content:center; }
   .skin-swatch{
     width:34px; height:34px; border-radius:8px; cursor:pointer; position:relative;
@@ -125,7 +125,7 @@
     font-size:9px; color:#fff4d6; text-shadow:1px 1px 0 rgba(0,0,0,.6);
   }
   .skin-groups{ display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
-  .skin-group-title{ font-size:8px; color:#cfc2e8; margin-bottom:4px; text-align:center; }
+  .skin-group-title{ font-size:10.5px; color:#dcd0f2; margin-bottom:6px; text-align:center; }
   .map-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .map-card{
     width:150px; padding:12px 10px; border-radius:6px; cursor:pointer;
@@ -322,7 +322,7 @@
           <p>🎮 조작 (1P): 이동 <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span> &nbsp;폭탄 <span class="key">SPACE</span></p>
           <p>🎮 조작 (2P): 이동 <span class="key">방향키</span> &nbsp;폭탄 <span class="key">ENTER</span></p>
           <p>💡 자신이 설치한 폭탄에도 맞으면 목숨이 줄어드니 주의하세요!</p>
-          <p>✨ 부서진 벽에서 나오는 아이템으로 폭탄 개수·범위·속도·생명·차기·관통·보호막을 얻을 수 있어요.</p>
+          <p>✨ 부서진 벽에서 나오는 아이템으로 폭탄 개수·범위·이동 속도·생명·폭탄 차기·관통·보호막을 얻을 수 있어요.</p>
         </div>
         <p id="bestStageText" style="font-size:11px; color:var(--gold); display:none;"></p>
         <div class="mode-row">
@@ -379,7 +379,7 @@
         <div class="size-row" id="sizeRow"></div>
         <div class="section-label" id="diffLabel">AI 난이도</div>
         <div class="size-row" id="diffRow"></div>
-        <p id="diffBestText" style="font-size:9px; color:var(--gold); margin:0 0 4px;"></p>
+        <p id="diffBestText" style="font-size:11px; color:var(--gold); margin:0 0 4px;"></p>
         <div class="section-label" id="stageLabel">시작 스테이지</div>
         <div class="size-row" id="stageRow"></div>
         <div class="section-label">캐릭터 스킨</div>
