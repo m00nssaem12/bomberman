@@ -345,6 +345,7 @@
             <button class="btn" id="btnCreateRoom">방 만들기</button>
             <button class="btn secondary" id="btnShowJoin">코드로 입장</button>
           </div>
+          <p id="onlineCreateStatus" style="font-size:11px; color:#cfc2e8; min-height:16px; margin-top:8px;"></p>
           <div id="joinRow" class="join-row hidden">
             <input id="joinCodeInput" class="code-input" maxlength="5" placeholder="방 코드">
             <button class="btn small" id="btnJoinRoom">입장</button>
@@ -522,13 +523,19 @@
   };
   let fbDb = null;
   let fbInitialized = false;
+  function setOnlineCreateStatus(msg, isError){
+    const el = document.getElementById('onlineCreateStatus');
+    if(el){ el.textContent = msg||''; el.style.color = isError ? '#ff8080' : '#cfc2e8'; }
+  }
   function ensureFirebase(){
     if(fbInitialized) return true;
     if(typeof firebase === 'undefined'){
+      setOnlineCreateStatus('⚠️ Firebase를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.', true);
       alert('Firebase 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.');
       return false;
     }
     if(firebaseConfig.apiKey === 'YOUR_API_KEY'){
+      setOnlineCreateStatus('⚠️ Firebase 설정이 채워지지 않았습니다.', true);
       alert('먼저 코드 상단의 firebaseConfig 값을 실제 Firebase 프로젝트 설정으로 채워주세요!\n(Firebase 콘솔 → 프로젝트 설정 → 웹 앱 → SDK 설정)\nRealtime Database를 생성하는 것도 잊지 마세요.');
       return false;
     }
@@ -540,6 +547,7 @@
       return true;
     }catch(e){
       console.error(e);
+      setOnlineCreateStatus('⚠️ Firebase 초기화 실패: '+e.message, true);
       alert('Firebase 초기화 실패: '+e.message);
       return false;
     }
@@ -661,6 +669,16 @@
 
   function createRoom(){
     if(!ensureFirebase()) return;
+    const btn = document.getElementById('btnCreateRoom');
+    if(btn){ btn.disabled = true; btn.style.opacity = '0.6'; btn.style.cursor = 'default'; }
+    setOnlineCreateStatus('⏳ 방 만드는 중...', false);
+    let settled = false;
+    const timeoutId = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
+      setOnlineCreateStatus('⚠️ 응답이 없습니다. 인터넷 연결을 확인하고 다시 시도해주세요.', true);
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+    }, 8000);
     roomCode = genRoomCode();
     onlineRole = 'host';
     onlineMySlot = 1;
@@ -675,13 +693,26 @@
       maxPlayers: onlineMaxPlayers,
       players:{ p1:{skin:onlineSkin, connected:true}, p2:null, p3:null, p4:null },
     }).then(()=>{
+      if(settled) return; // 이미 타임아웃으로 실패 처리된 경우엔 무시
+      settled = true;
+      clearTimeout(timeoutId);
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+      setOnlineCreateStatus('', false);
       // 방 전체를 즉시 지우지 않고, 내 접속 상태만 표시 (순간적인 와이파이 끊김에도 방이 바로 사라지지 않도록)
       fbDb.ref(roomPath(roomCode,'players/p1')).onDisconnect().update({connected:false});
       attachHostListeners(roomCode);
       attachRosterListener(roomCode);
       attachMaxPlayersListener(roomCode);
       showOnlineLobbyUI();
-    }).catch(e=>{ console.error(e); alert('방 생성 실패: '+e.message); });
+    }).catch(e=>{
+      console.error(e);
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+      setOnlineCreateStatus('⚠️ 방 생성 실패: '+e.message, true);
+      alert('방 생성 실패: '+e.message);
+    });
   }
 
   function joinRoom(codeRaw){
@@ -1425,6 +1456,9 @@
     document.getElementById('onlineLobbyPhase').classList.add('hidden');
     document.getElementById('joinRow').classList.add('hidden');
     document.getElementById('btnBackToModeOnline').classList.remove('hidden');
+    setOnlineCreateStatus('', false);
+    const cbtn = document.getElementById('btnCreateRoom');
+    if(cbtn){ cbtn.disabled = false; cbtn.style.opacity = ''; cbtn.style.cursor = ''; }
   }
   function openOnlineScreen(){
     hideAllOverlays();
