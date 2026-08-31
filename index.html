@@ -1971,7 +1971,14 @@
   }, {capture:true});
 
   // ---------- 입력 ----------
+  function isTypingInField(e){
+    const t = e.target;
+    if(!t) return false;
+    const tag = t.tagName;
+    return tag==='INPUT' || tag==='TEXTAREA' || t.isContentEditable;
+  }
   window.addEventListener('keydown', (e)=>{
+    if(isTypingInField(e)) return;
     if(activeGameKeys().has(e.code)) e.preventDefault();
     if(gameState!=='playing') return;
     if(!keys.has(e.code)){
