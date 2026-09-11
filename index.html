@@ -120,7 +120,7 @@
   .size-btn.active{ border-color:var(--gold); color:#fff4d6; background:#2e2043; }
   .size-btn.dup-warning{ border-color:#ff5a5a; color:#ffd6d6; box-shadow:0 0 0 1px #ff5a5a inset; }
 
-  .section-label{ font-size:11px; color:#c6b8e8; letter-spacing:1px; margin:14px 0 6px; }
+  .section-label{ font-size:11px; color:#d8c9f0; letter-spacing:1px; margin:14px 0 6px; }
   .skin-row{ display:flex; gap:10px; margin-bottom:4px; flex-wrap:wrap; justify-content:center; }
   .skin-swatch{
     width:34px; height:34px; border-radius:8px; cursor:pointer; position:relative;
@@ -339,13 +339,33 @@
         <div class="mode-row">
           <button class="btn" id="btn1p">1인용<br>VS AI</button>
           <button class="btn" id="btn2p">2인용<br>로컬 대전</button>
-          <button class="btn secondary" id="btnOnline">온라인 대전<br>(베타)</button>
+          <button class="btn secondary" id="btnOnline">온라인 대전</button>
         </div>
         <div class="mode-row" style="margin-top:14px;">
           <button class="btn secondary small" id="btnKeyConfig">🎮 조작 설정</button>
           <button class="btn secondary small" id="btnColorblind">🎨 색약 모드: OFF</button>
         </div>
         <p style="margin-top:10px; font-size:8px; letter-spacing:1px; color:#6b5a94;">made by m00n</p>
+      </div>
+
+      <div class="overlay hidden" id="teamScreen">
+        <h2>2인용 로컬 대전</h2>
+        <p style="max-width:420px; margin:0 auto; color:#cfc2e8;">1대1로 자유롭게 붙거나, 2대2 팀전으로 AI와 함께(또는 상대로) 싸울 수 있어요. AI도 폭탄을 설치하는 진짜 플레이어처럼 움직입니다.</p>
+        <div class="mode-row" style="margin-top:12px;">
+          <button class="btn" id="btnFreeForAll">⚔️ 자유대전<br>(1대1)</button>
+        </div>
+        <div class="mode-row">
+          <button class="btn" id="btnTeamTwoHuman">🔵 2인 팀 (P1+P2)<br>vs 🔴 AI 2명</button>
+        </div>
+        <div class="mode-row">
+          <button class="btn" id="btnTeamSoloAI">🔵 1인 + AI 아군<br>vs 🔴 AI 2명</button>
+        </div>
+        <div class="mode-row">
+          <button class="btn" id="btnTeamSoloSolo">🔵 1인+AI 아군<br>vs 🔴 1인+AI 아군</button>
+        </div>
+        <div class="mode-row" style="margin-top:14px;">
+          <button class="btn secondary small" id="btnBackToModeTeam">뒤로</button>
+        </div>
       </div>
 
       <div class="overlay hidden" id="onlineScreen">
@@ -368,6 +388,14 @@
           <div id="onlineHostOptions" class="hidden">
             <div class="section-label">최대 인원</div>
             <div class="size-row" id="onlineCountRow"></div>
+            <div class="section-label">팀전</div>
+            <div class="mode-row" style="justify-content:flex-start;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#e7ddf7; cursor:pointer;">
+                <input type="checkbox" id="onlineTeamModeCheck" style="width:16px; height:16px;">
+                2vs2 팀전으로 시작 (빈 자리는 AI가 채웁니다)
+              </label>
+              <p style="font-size:10px; color:#cfc2e8; margin:4px 0 0 24px;">친구 4명이 모두 접속하면 AI 없이 사람 2대2로 대결하게 됩니다.</p>
+            </div>
             <div class="section-label">맵 크기</div>
             <div class="size-row" id="onlineSizeRow"></div>
             <div class="map-grid" id="onlineMapGrid"></div>
@@ -1145,6 +1173,8 @@
     const hostOptions = document.getElementById('onlineHostOptions');
     if(onlineRole==='host'){
       hostOptions.classList.remove('hidden');
+      const teamCheck = document.getElementById('onlineTeamModeCheck');
+      if(teamCheck) teamCheck.checked = false;
       renderOnlinePlayerCountRow();
       renderOnlineSizeRow();
       renderOnlineMapGrid();
@@ -1167,7 +1197,7 @@
     for(let s=1; s<=onlineMaxPlayers; s++){
       const d = rosterCache[s] || (s===1 ? {connected:true} : {connected:false});
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:9px; color:#cfc2e8;';
+      row.style.cssText = 'display:flex; align-items:center; gap:8px; font-size:10px; color:#e7ddf7;';
       const dot = document.createElement('span');
       dot.style.cssText = 'width:9px; height:9px; border-radius:2px; display:inline-block; background:' + (d.connected ? '#3ecf6e' : '#4b3670') + ';';
       const label = document.createElement('span');
@@ -1179,12 +1209,18 @@
   function updateOnlineLobbyStatus(){
     const statusEl = document.getElementById('onlineStatusText');
     const startBtn = document.getElementById('btnStartOnline');
+    const teamCheck = document.getElementById('onlineTeamModeCheck');
+    const teamModeOn = !!(teamCheck && teamCheck.checked);
     if(onlineRole==='host'){
       const connectedGuests = [2,3,4].filter(s=>s<=onlineMaxPlayers && guestConnectedSlots[s]).length;
-      statusEl.textContent = connectedGuests>0
-        ? `${connectedGuests}명이 접속했습니다! 시작할 수 있어요. (최대 ${onlineMaxPlayers}인)`
-        : `상대방을 기다리는 중... (최대 ${onlineMaxPlayers}인, 코드를 공유하세요)`;
-      startBtn.classList.toggle('hidden', connectedGuests===0);
+      if(teamModeOn){
+        statusEl.textContent = `2vs2 팀전으로 시작합니다. 빈 자리는 AI가 채워요. (현재 ${connectedGuests}명 접속)`;
+      } else {
+        statusEl.textContent = connectedGuests>0
+          ? `${connectedGuests}명이 접속했습니다! 시작할 수 있어요. (최대 ${onlineMaxPlayers}인)`
+          : `상대방을 기다리는 중... (최대 ${onlineMaxPlayers}인, 코드를 공유하세요)`;
+      }
+      startBtn.classList.toggle('hidden', !teamModeOn && connectedGuests===0);
     } else {
       statusEl.textContent = '호스트가 게임을 시작하기를 기다리는 중...';
       startBtn.classList.add('hidden');
@@ -1199,6 +1235,8 @@
       b.className = 'size-btn' + (n===onlineMaxPlayers ? ' active' : '');
       b.textContent = n+'인';
       b.addEventListener('click', ()=>{
+        const teamCheck = document.getElementById('onlineTeamModeCheck');
+        if(teamCheck && teamCheck.checked){ alert('팀전 모드에서는 인원이 4인으로 고정됩니다.'); return; }
         // 현재 접속해 있는 인원보다 줄이면 누군가 튕겨나갈 수 있으니 막는다.
         const connectedCount = 1 + [2,3,4].filter(s=>guestConnectedSlots[s]).length;
         if(n < connectedCount){ alert('이미 접속한 인원보다 적게는 설정할 수 없습니다.'); return; }
@@ -1258,10 +1296,13 @@
     return [1, ROWS-2];
   }
   function startOnlineHostGame(){
+    const teamCheck = document.getElementById('onlineTeamModeCheck');
+    const teamModeOn = !!(teamCheck && teamCheck.checked);
     const connectedGuestSlots = [2,3,4].filter(s=>s<=onlineMaxPlayers && guestConnectedSlots[s]);
-    if(connectedGuestSlots.length===0){ alert('상대방이 아직 입장하지 않았습니다.'); return; }
+    if(!teamModeOn && connectedGuestSlots.length===0){ alert('상대방이 아직 입장하지 않았습니다.'); return; }
     onlineMode = true;
     mode = '2p';
+    onlineTeamMode = teamModeOn;
     applyDimensions(onlineSelectedSizeKey);
     currentThemeIdx = onlineSelectedThemeIdx; startThemeIdx = onlineSelectedThemeIdx; stageNum = 1;
     statsStartTime = Date.now(); statsStagesCleared = 0; statsItemsCollected = 0;
@@ -1269,13 +1310,19 @@
     bombs = []; explosions = []; shake = 0; floatTexts = [];
     const remoteControls = {up:[],down:[],left:[],right:[],bomb:[]};
     const hostControls = {up:['KeyW','ArrowUp'],down:['KeyS','ArrowDown'],left:['KeyA','ArrowLeft'],right:['KeyD','ArrowRight'],bomb:['Space','Enter']};
-    const activeSlots = [1, ...connectedGuestSlots].sort((a,b)=>a-b);
+    // 팀전(2vs2)이면 4자리를 모두 사용하고, 빈 자리는 AI가 채운다. 팀 배정: 1·4번(왼쪽) = 블루팀, 2·3번(오른쪽) = 레드팀.
+    const activeSlots = teamModeOn ? [1,2,3,4] : [1, ...connectedGuestSlots].sort((a,b)=>a-b);
+    const TEAM_BY_SLOT = {1:'A', 4:'A', 2:'B', 3:'B'};
     players = activeSlots.map(slot=>{
       const [gx,gy] = cornerForSlot(slot);
-      const skinKey = slot===1 ? onlineSkin : remoteSkins[slot];
+      const isConnected = (slot===1) || !!guestConnectedSlots[slot];
+      const skinKey = slot===1 ? onlineSkin : (remoteSkins[slot] || SKINS[slot%SKINS.length].key);
       const controls = slot===1 ? hostControls : remoteControls;
       const p = makePlayer(slot-1, gx, gy, controls, skinKey);
-      p.name = slot===1 ? getMyNickname('PLAYER 1') : (remoteNames[slot] || ('PLAYER '+slot));
+      let baseName = slot===1 ? getMyNickname('PLAYER 1') : (remoteNames[slot] || ('PLAYER '+slot));
+      if(!isConnected){ p.aiControlled = true; baseName = 'AI '+slot; }
+      if(teamModeOn){ p.team = TEAM_BY_SLOT[slot]; baseName += ' ['+TEAM_LABEL[p.team]+']'; }
+      p.name = baseName;
       return p;
     });
     enemies = [];
@@ -1560,6 +1607,21 @@
   ];
 
   let selectedMode = '1p';
+  // ---------- 팀전 ----------
+  // 'twoHuman': P1+P2(사람) vs AI 2명 / 'soloAllyVsAI': P1(사람)+AI 아군 vs AI 2명 / 'soloAllyVsSoloAlly': P1+AI 아군 vs P2+AI 아군
+  let teamComposition = 'twoHuman';
+  let onlineTeamMode = false; // 온라인 대전에서 2vs2 팀전으로 시작했는지 여부 (호스트만 사용)
+  const TEAM_LABEL = { A:'블루팀', B:'레드팀' };
+  // 실제로 폭탄을 설치하는 '플레이어형' AI의 난이도별 튜닝값.
+  // reactMs: 다음 행동을 결정하기까지 걸리는 시간, chaseDepth/escapeDepth: 추격/도주 시 BFS 탐색 깊이,
+  // bombCooldownMs: 폭탄 설치 후 다음 설치까지 최소 대기시간, wallBombChance: 인접한 부술 수 있는 벽을 폭파할 확률
+  const AI_BOMBER_TUNING = {
+    veryEasy:  { reactMs:700, chaseDepth:6,  escapeDepth:6,  bombCooldownMs:1700, wallBombChance:0.35 },
+    easy:      { reactMs:550, chaseDepth:8,  escapeDepth:8,  bombCooldownMs:1400, wallBombChance:0.5  },
+    normal:    { reactMs:400, chaseDepth:10, escapeDepth:10, bombCooldownMs:1050, wallBombChance:0.65 },
+    hard:      { reactMs:280, chaseDepth:14, escapeDepth:12, bombCooldownMs:780,  wallBombChance:0.8  },
+    veryHard:  { reactMs:180, chaseDepth:18, escapeDepth:14, bombCooldownMs:550,  wallBombChance:0.92 },
+  };
   let startThemeIdx = 0;
   let currentThemeIdx = 0;
   let stageNum = 1;
@@ -1720,6 +1782,14 @@
       legendP1.innerHTML = `<b>PLAYER 1</b><br>이동 ${moveKeysHtml(p1Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p1Bindings.bomb)}</span>`;
       legendP2.style.display = '';
       legendP2.innerHTML = `<b>PLAYER 2</b><br>이동 ${moveKeysHtml(p2Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p2Bindings.bomb)}</span>`;
+    } else if(mode==='team'){
+      legendP1.innerHTML = `<b>PLAYER 1 (${TEAM_LABEL.A})</b><br>이동 ${moveKeysHtml(p1Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p1Bindings.bomb)}</span>`;
+      if(teamComposition==='soloAllyVsSoloAlly'){
+        legendP2.style.display = '';
+        legendP2.innerHTML = `<b>PLAYER 2 (${TEAM_LABEL.B})</b><br>이동 ${moveKeysHtml(p2Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p2Bindings.bomb)}</span>`;
+      } else {
+        legendP2.style.display = 'none';
+      }
     } else {
       legendP1.innerHTML = `<b>PLAYER 1</b><br>이동 ${moveKeysHtml(p1Bindings)} 또는 ${moveKeysHtml(p2Bindings)}&nbsp;폭탄 <span class="key">${keyLabel(p1Bindings.bomb)}</span> / <span class="key">${keyLabel(p2Bindings.bomb)}</span>`;
       legendP2.style.display = 'none';
@@ -1728,7 +1798,7 @@
   const tbomb2 = document.getElementById('tbomb2');
 
   function hideAllOverlays(){
-    [startScreen, mapScreen, onlineScreenEl, stageClearScreen, overScreen, keyConfigScreen].forEach(o=>{ o.classList.add('hidden'); o.scrollTop = 0; });
+    [startScreen, mapScreen, onlineScreenEl, stageClearScreen, overScreen, keyConfigScreen, document.getElementById('teamScreen')].forEach(o=>{ o.classList.add('hidden'); o.scrollTop = 0; });
     confirmScreen.classList.add('hidden');
   }
 
@@ -1809,8 +1879,9 @@
   }
   function renderSkinGroups(){
     skinGroups.innerHTML = '';
-    renderSkinRow(skinGroups, ()=>selectedSkinP1, (k)=>{selectedSkinP1=k;}, selectedMode==='2p' ? 'PLAYER 1' : null);
-    if(selectedMode==='2p'){
+    const showP2 = (selectedMode==='2p') || (selectedMode==='team' && teamComposition==='soloAllyVsSoloAlly');
+    renderSkinRow(skinGroups, ()=>selectedSkinP1, (k)=>{selectedSkinP1=k;}, showP2 ? 'PLAYER 1' : null);
+    if(showP2){
       renderSkinRow(skinGroups, ()=>selectedSkinP2, (k)=>{selectedSkinP2=k;}, 'PLAYER 2');
     }
   }
@@ -1877,6 +1948,13 @@
       diffLabel.style.display = ''; diffRow.style.display = '';
       document.getElementById('diffBestText').style.display = '';
       stageLabel.style.display = ''; stageRow.style.display = '';
+    } else if(m==='team'){
+      mapTitle.textContent = '팀전 맵을 선택하세요';
+      mapDesc.textContent = '🔵 블루팀과 🔴 레드팀이 2대2로 맞붙습니다. AI 난이도를 골라주세요.';
+      diffLabel.textContent = 'AI 난이도';
+      diffLabel.style.display = ''; diffRow.style.display = '';
+      document.getElementById('diffBestText').style.display = 'none';
+      stageLabel.style.display = 'none'; stageRow.style.display = 'none';
     } else {
       mapTitle.textContent = '대전할 맵을 선택하세요';
       mapDesc.textContent = '선택한 맵에서 플레이어 1과 2가 맞대결합니다.';
@@ -2008,7 +2086,7 @@
     bomb1.addEventListener('pointerdown', (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); bomb1.classList.add('pressed'); myBombPress(); });
     bomb1.addEventListener('pointerup', ()=>{ if(!touchPositionMode) bomb1.classList.remove('pressed'); });
     bomb1.addEventListener('pointerleave', ()=>{ if(!touchPositionMode) bomb1.classList.remove('pressed'); });
-    bomb2.addEventListener('pointerdown', (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); bomb2.classList.add('pressed'); if(players[1]) tryPlaceBomb(players[1]); });
+    bomb2.addEventListener('pointerdown', (e)=>{ if(touchPositionMode) return; e.preventDefault(); ensureAudio(); bomb2.classList.add('pressed'); players.forEach(p=>{ if(p.controls && p.controls.bomb && p.controls.bomb.includes(p2Bindings.bomb)) tryPlaceBomb(p); }); });
     bomb2.addEventListener('pointerup', ()=>{ if(!touchPositionMode) bomb2.classList.remove('pressed'); });
     bomb2.addEventListener('pointerleave', ()=>{ if(!touchPositionMode) bomb2.classList.remove('pressed'); });
   }
@@ -2192,7 +2270,7 @@
       }
     }
     clearZone(1,1); clearZone(COLS-2,ROWS-2);
-    if(mode==='2p'){ clearZone(COLS-2,1); clearZone(1,ROWS-2); }
+    if(mode==='2p' || mode==='team'){ clearZone(COLS-2,1); clearZone(1,ROWS-2); }
   }
   function clearZone(cx,cy){
     const cells = [[cx,cy],[cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]];
@@ -2225,6 +2303,49 @@
     };
   }
 
+  const AI_EMPTY_CONTROLS = {up:[],down:[],left:[],right:[],bomb:[]};
+  function pickAiSkin(exclude){
+    return (SKINS.find(s=>!exclude.includes(s.key)) || SKINS[0]).key;
+  }
+  // 로컬 팀전 구성에 맞춰 플레이어 배열을 만든다. 코너 1=좌상단,2=우하단,3=우상단,4=좌하단(온라인과 동일한 배치 재사용).
+  function buildTeamPlayers(){
+    const p1Controls = singleControls(p1Bindings);
+    const p2Controls = singleControls(p2Bindings);
+    const used = [selectedSkinP1];
+    const list = [];
+    if(teamComposition==='twoHuman'){
+      used.push(selectedSkinP2);
+      const [c1x,c1y] = cornerForSlot(1), [c2x,c2y] = cornerForSlot(2), [c3x,c3y] = cornerForSlot(3), [c4x,c4y] = cornerForSlot(4);
+      const p1 = makePlayer(0, c1x,c1y, p1Controls, selectedSkinP1); p1.team='A'; p1.name = getMyNickname('PLAYER 1')+' ['+TEAM_LABEL.A+']';
+      const p2 = makePlayer(1, c2x,c2y, p2Controls, selectedSkinP2); p2.team='A'; p2.name = 'PLAYER 2 ['+TEAM_LABEL.A+']';
+      const s3 = pickAiSkin(used); used.push(s3);
+      const s4 = pickAiSkin(used); used.push(s4);
+      const e1 = makePlayer(2, c3x,c3y, {...AI_EMPTY_CONTROLS}, s3); e1.team='B'; e1.aiControlled=true; e1.name='AI 1 ['+TEAM_LABEL.B+']';
+      const e2 = makePlayer(3, c4x,c4y, {...AI_EMPTY_CONTROLS}, s4); e2.team='B'; e2.aiControlled=true; e2.name='AI 2 ['+TEAM_LABEL.B+']';
+      list.push(p1,p2,e1,e2);
+    } else if(teamComposition==='soloAllyVsAI'){
+      const [c1x,c1y] = cornerForSlot(1), [c4x,c4y] = cornerForSlot(4), [c2x,c2y] = cornerForSlot(2), [c3x,c3y] = cornerForSlot(3);
+      const p1 = makePlayer(0, c1x,c1y, p1Controls, selectedSkinP1); p1.team='A'; p1.name = getMyNickname('PLAYER 1')+' ['+TEAM_LABEL.A+']';
+      const sAlly = pickAiSkin(used); used.push(sAlly);
+      const ally = makePlayer(1, c4x,c4y, {...AI_EMPTY_CONTROLS}, sAlly); ally.team='A'; ally.aiControlled=true; ally.name='AI 아군 ['+TEAM_LABEL.A+']';
+      const s3 = pickAiSkin(used); used.push(s3);
+      const s2 = pickAiSkin(used); used.push(s2);
+      const e1 = makePlayer(2, c2x,c2y, {...AI_EMPTY_CONTROLS}, s2); e1.team='B'; e1.aiControlled=true; e1.name='AI 1 ['+TEAM_LABEL.B+']';
+      const e2 = makePlayer(3, c3x,c3y, {...AI_EMPTY_CONTROLS}, s3); e2.team='B'; e2.aiControlled=true; e2.name='AI 2 ['+TEAM_LABEL.B+']';
+      list.push(p1,ally,e1,e2);
+    } else { // soloAllyVsSoloAlly
+      const [c1x,c1y] = cornerForSlot(1), [c4x,c4y] = cornerForSlot(4), [c2x,c2y] = cornerForSlot(2), [c3x,c3y] = cornerForSlot(3);
+      const p1 = makePlayer(0, c1x,c1y, p1Controls, selectedSkinP1); p1.team='A'; p1.name = getMyNickname('PLAYER 1')+' ['+TEAM_LABEL.A+']';
+      const sAlly1 = pickAiSkin(used); used.push(sAlly1);
+      const ally1 = makePlayer(1, c4x,c4y, {...AI_EMPTY_CONTROLS}, sAlly1); ally1.team='A'; ally1.aiControlled=true; ally1.name='AI 아군 ['+TEAM_LABEL.A+']';
+      used.push(selectedSkinP2);
+      const p2 = makePlayer(2, c2x,c2y, p2Controls, selectedSkinP2); p2.team='B'; p2.name = 'PLAYER 2 ['+TEAM_LABEL.B+']';
+      const sAlly2 = pickAiSkin(used); used.push(sAlly2);
+      const ally2 = makePlayer(3, c3x,c3y, {...AI_EMPTY_CONTROLS}, sAlly2); ally2.team='B'; ally2.aiControlled=true; ally2.name='AI 아군 ['+TEAM_LABEL.B+']';
+      list.push(p1,ally1,p2,ally2);
+    }
+    return list;
+  }
   function resetPlayerPosition(p, gx, gy){
     p.spawnX=gx; p.spawnY=gy;
     p.px = gx*TILE + (TILE-PLAYER_SIZE)/2;
@@ -2252,7 +2373,10 @@
     }
     stageStartTime = Date.now();
 
-    if(freshRun || players.length===0 || players[0].id!==0){
+    if(mode==='team'){
+      // 팀전은 구성(사람/AI 인원)이 바뀔 수 있으므로 매번 새로 플레이어를 만든다.
+      players = buildTeamPlayers();
+    } else if(freshRun || players.length===0 || players[0].id!==0){
       players = [];
       const p1Controls = (mode==='2p') ? singleControls(p1Bindings) : mergedControls(p1Bindings, p2Bindings);
       players.push(makePlayer(0, 1,1, p1Controls, selectedSkinP1));
@@ -2264,7 +2388,14 @@
       if(mode==='2p' && players[1]) resetPlayerPosition(players[1], COLS-2,ROWS-2);
     }
 
-    if(mode==='2p'){
+    if(mode==='team'){
+      enemies = [];
+      p2Label.textContent = 'PLAYER 2';
+      p2Box.classList.remove('p1'); p2Box.classList.add('p2');
+      const hasSecondHuman = (teamComposition==='soloAllyVsSoloAlly');
+      tpad2.style.display = hasSecondHuman ? 'block' : 'none';
+      tbomb2.style.display = hasSecondHuman ? 'flex' : 'none';
+    } else if(mode==='2p'){
       enemies = [];
       p2Label.textContent = 'PLAYER 2';
       p2Box.classList.remove('p1'); p2Box.classList.add('p2');
@@ -2698,12 +2829,137 @@
     return best;
   }
 
+  // ---------- 팀전용 AI: 폭탄을 직접 설치하는 '플레이어형' AI ----------
+  // 직선(가로/세로) 상에 있는 두 칸 사이에, 폭발이 못 뚫고 멈추는 고정벽/부술 수 있는 벽이 있는지 확인.
+  function lineClearAxis(cx,cy,tx,ty){
+    if(cx===tx && cy===ty) return false;
+    if(cx===tx){
+      const step = ty>cy?1:-1;
+      for(let y=cy+step; y!==ty; y+=step){ if(grid[y][cx]===1 || grid[y][cx]===2) return false; }
+      return true;
+    } else if(cy===ty){
+      const step = tx>cx?1:-1;
+      for(let x=cx+step; x!==tx; x+=step){ if(grid[cy][x]===1 || grid[cy][x]===2) return false; }
+      return true;
+    }
+    return false;
+  }
+  // (x,y)에 range짜리 폭탄을 놓는다고 가정했을 때, 그 폭발이 덮게 될 칸들의 집합을 계산.
+  function aiComputeBombBlast(x,y,range,pierce){
+    const set = new Set([x+','+y]);
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    for(const [dx,dy] of dirs){
+      for(let i=1;i<=range;i++){
+        const tx=x+dx*i, ty=y+dy*i;
+        if(tx<0||ty<0||tx>=COLS||ty>=ROWS) break;
+        const t = grid[ty][tx];
+        if(t===1) break;
+        set.add(tx+','+ty);
+        if(t===2){ if(!pierce) break; }
+      }
+    }
+    return set;
+  }
+  // 지금 위치에 폭탄을 놓아도, 그 폭발 범위(+기존 위험 지역)를 완전히 벗어나 안전하게 도망칠 경로가 있는지 확인.
+  function aiCanEscapeAfterBomb(p, cx, cy, dangerSet, tuning){
+    const hypo = aiComputeBombBlast(cx, cy, p.range, p.pierce);
+    const combined = new Set(dangerSet);
+    for(const k of hypo) combined.add(k);
+    const dir = bfsFirstStep(cx, cy, (x,y)=>!combined.has(x+','+y), tuning.escapeDepth, null);
+    return !!dir;
+  }
+  function aiWalkableDirs(p, curCx, curCy){
+    return Object.keys(DIRVEC).filter(d=>{
+      const [ddx,ddy] = DIRVEC[d];
+      return canStandAt(p.px+ddx*4, p.py+ddy*4, PLAYER_SIZE, p);
+    });
+  }
+  // 폭탄을 설치하고, 그 즉시 안전한 방향으로 도망치기 시작하도록 방향을 정해준다.
+  function placeAIBomb(p, cx, cy, dangerSet, tuning){
+    tryPlaceBomb(p);
+    p.aiBombCooldown = tuning.bombCooldownMs + Math.random()*300;
+    const hypo = aiComputeBombBlast(cx, cy, p.range, p.pierce);
+    const combined = new Set(dangerSet);
+    for(const k of hypo) combined.add(k);
+    const esc = bfsFirstStep(cx, cy, (x,y)=>!combined.has(x+','+y), tuning.escapeDepth, null);
+    const options = aiWalkableDirs(p, cx, cy);
+    p.aiDir = (esc && options.includes(esc)) ? esc : (options.length? options[Math.floor(Math.random()*options.length)] : null);
+    p.aiThinkT = 150;
+  }
+  // 팀전 AI 플레이어의 행동을 결정한다: 위험 회피 > 상대 저격 폭탄 > 벽 폭파 > 추격/배회.
+  function decideAIMove(p, dangerSet){
+    const tuning = AI_BOMBER_TUNING[currentDifficultyKey] || AI_BOMBER_TUNING.normal;
+    const curCx = Math.floor((p.px+PLAYER_SIZE/2)/TILE);
+    const curCy = Math.floor((p.py+PLAYER_SIZE/2)/TILE);
+    const options = aiWalkableDirs(p, curCx, curCy);
+    const inDanger = dangerSet.has(curCx+','+curCy);
+
+    if(inDanger){
+      const esc = findEscapeDirection(curCx, curCy, dangerSet, tuning.escapeDepth);
+      p.aiDir = (esc && options.includes(esc)) ? esc : (options.length? options[Math.floor(Math.random()*options.length)] : null);
+      p.aiThinkT = 120 + Math.random()*80;
+      return;
+    }
+
+    let target=null, targetDist=Infinity, tCx=0, tCy=0;
+    for(const o of players){
+      if(!o.alive || o.team===p.team) continue;
+      const ocx = Math.floor((o.px+PLAYER_SIZE/2)/TILE), ocy = Math.floor((o.py+PLAYER_SIZE/2)/TILE);
+      const d = Math.abs(ocx-curCx)+Math.abs(ocy-curCy);
+      if(d<targetDist){ targetDist=d; target=o; tCx=ocx; tCy=ocy; }
+    }
+
+    if(target && (p.aiBombCooldown||0)<=0 && p.bombsActive<p.maxBombs){
+      const aligned = (tCy===curCy && Math.abs(tCx-curCx)<=p.range) || (tCx===curCx && Math.abs(tCy-curCy)<=p.range);
+      if(aligned && lineClearAxis(curCx,curCy,tCx,tCy) && aiCanEscapeAfterBomb(p,curCx,curCy,dangerSet,tuning)){
+        placeAIBomb(p, curCx, curCy, dangerSet, tuning);
+        return;
+      }
+    }
+
+    if((p.aiBombCooldown||0)<=0 && p.bombsActive<p.maxBombs && Math.random()<tuning.wallBombChance){
+      const adjSoft = Object.keys(DIRVEC).some(d=>{
+        const [ddx,ddy] = DIRVEC[d]; const tx=curCx+ddx, ty=curCy+ddy;
+        return tx>=0&&ty>=0&&tx<COLS&&ty<ROWS&&grid[ty][tx]===2;
+      });
+      if(adjSoft && aiCanEscapeAfterBomb(p,curCx,curCy,dangerSet,tuning)){
+        placeAIBomb(p, curCx, curCy, dangerSet, tuning);
+        return;
+      }
+    }
+
+    let dir=null;
+    if(target) dir = findChaseDirection(curCx, curCy, tCx, tCy, tuning.chaseDepth, dangerSet);
+    if(!dir || !options.includes(dir)){
+      const safeOptions = options.filter(d=>{
+        const [ddx,ddy] = DIRVEC[d];
+        return !dangerSet.has((curCx+ddx)+','+(curCy+ddy));
+      });
+      const pool = safeOptions.length ? safeOptions : options;
+      dir = pool.length ? pool[Math.floor(Math.random()*pool.length)] : p.aiDir;
+    }
+    p.aiDir = dir;
+    p.aiThinkT = tuning.reactMs + Math.random()*tuning.reactMs*0.5;
+  }
+  function updateAIDecision(p, dt, dangerSet){
+    if(!p.alive){ p.aiDx=0; p.aiDy=0; return; }
+    p.aiThinkT = (p.aiThinkT||0) - dt;
+    p.aiBombCooldown = Math.max(0, (p.aiBombCooldown||0) - dt);
+    if(p.aiThinkT<=0) decideAIMove(p, dangerSet);
+    if(p.aiDir){
+      const [ddx,ddy] = DIRVEC[p.aiDir];
+      p.aiDx = ddx; p.aiDy = ddy;
+    } else { p.aiDx = 0; p.aiDy = 0; }
+  }
+
   // ---------- 업데이트 ----------
   function updatePlayer(p, dt){
     if(p.invulnT>0) p.invulnT = Math.max(0, p.invulnT-dt);
     if(!p.alive) return;
     let dx=0, dy=0;
-    if(onlineMode && onlineRole==='host' && p.id>=1){
+    if(p.aiControlled){
+      dx = p.aiDx||0; dy = p.aiDy||0;
+    } else if(onlineMode && onlineRole==='host' && p.id>=1){
       const ri = remoteInputs[p.id+1];
       if(ri){
         if(ri.up) dy=-1; else if(ri.down) dy=1;
@@ -2752,8 +3008,9 @@
     for(const ft of floatTexts) ft.life -= dt;
     floatTexts = floatTexts.filter(f=>f.life>0);
     if(onlineMode && onlineRole==='guest'){ interpolateGuestPlayers(); return; } // 게스트는 위치만 부드럽게 보간하고, 실제 판정은 호스트 상태를 그대로 따름
-    for(const p of players) updatePlayer(p, dt);
     const dangerSet = computeDangerTiles();
+    for(const p of players) if(p.aiControlled) updateAIDecision(p, dt, dangerSet);
+    for(const p of players) updatePlayer(p, dt);
     for(const en of enemies) if(en.alive) updateEnemy(en, dt, dangerSet);
 
     for(const b of bombs){ if(!b.exploded) updateBombKick(b, dt); }
@@ -2790,6 +3047,16 @@
       const p = players[0];
       if(!p.alive){ endGame(false, '패배...', `STAGE ${stageNum}(${THEMES[currentThemeIdx].name})에서 쓰러졌습니다.`); return; }
       if(enemies.length===0){ stageClear(); return; }
+    } else if(mode==='team' || onlineTeamMode){
+      const teamsAlive = new Set(players.filter(p=>p.alive).map(p=>p.team));
+      if(teamsAlive.size<=1){
+        if(teamsAlive.size===1){
+          const winTeam = [...teamsAlive][0];
+          endGame(true, `${TEAM_LABEL[winTeam]||winTeam} 승리!`, '상대 팀을 모두 쓰러뜨렸습니다!');
+        } else {
+          endGame(true, '무승부!', '두 팀 모두 쓰러졌습니다.');
+        }
+      }
     } else {
       const alive = players.filter(p=>p.alive);
       if(alive.length<=1){
@@ -2938,6 +3205,8 @@
       hudMid.textContent = `ONLINE ${roomCode||''}\n${theme.icon} ${theme.name}`;
     } else if(mode==='1p'){
       hudMid.textContent = `STAGE ${stageNum}\n${theme.icon} ${theme.name}`;
+    } else if(mode==='team'){
+      hudMid.textContent = `팀전 ${TEAM_LABEL.A} vs ${TEAM_LABEL.B}\n${theme.icon} ${theme.name}`;
     } else {
       hudMid.textContent = `2P 대전\n${theme.icon} ${theme.name}`;
     }
@@ -2965,14 +3234,14 @@
     const p1Dot = document.getElementById('p1Dot');
     const p2Dot = document.getElementById('p2Dot');
     const extraRow = document.getElementById('hudExtraRow');
-    p1Label.textContent = onlineMode ? (p1.name || 'PLAYER 1') : getMyNickname('PLAYER 1');
-    if(mode==='2p'){
+    p1Label.textContent = (onlineMode || mode==='team') ? (p1.name || 'PLAYER 1') : getMyNickname('PLAYER 1');
+    if(mode==='2p' || mode==='team'){
       const p2 = players[1];
       if(p2){
-        p2Label.textContent = onlineMode ? (p2.name || 'PLAYER 2') : 'PLAYER 2';
+        p2Label.textContent = (onlineMode || mode==='team') ? (p2.name || 'PLAYER 2') : 'PLAYER 2';
         p2Stats.innerHTML = playerStatsHtml(p2);
       }
-      if(onlineMode){
+      if(onlineMode || mode==='team'){
         applyBoxColor(p1Box, p1Dot, p1.skin);
         if(p2) applyBoxColor(p2Box, p2Dot, p2.skin);
         const p3 = players[2], p4 = players[3];
@@ -3261,11 +3530,29 @@
 
   // ---------- 버튼 ----------
   document.getElementById('btn1p').addEventListener('click', ()=>{ ensureAudio(); openMapScreen('1p'); });
-  document.getElementById('btn2p').addEventListener('click', ()=>{ ensureAudio(); openMapScreen('2p'); });
+  document.getElementById('btn2p').addEventListener('click', ()=>{
+    ensureAudio();
+    hideAllOverlays();
+    document.getElementById('teamScreen').classList.remove('hidden');
+    gameState = 'start';
+  });
+  document.getElementById('btnFreeForAll').addEventListener('click', ()=>{ openMapScreen('2p'); });
+  document.getElementById('btnTeamTwoHuman').addEventListener('click', ()=>{ teamComposition='twoHuman'; openMapScreen('team'); });
+  document.getElementById('btnTeamSoloAI').addEventListener('click', ()=>{ teamComposition='soloAllyVsAI'; openMapScreen('team'); });
+  document.getElementById('btnTeamSoloSolo').addEventListener('click', ()=>{ teamComposition='soloAllyVsSoloAlly'; openMapScreen('team'); });
+  document.getElementById('btnBackToModeTeam').addEventListener('click', ()=>{
+    hideAllOverlays();
+    startScreen.classList.remove('hidden');
+    gameState = 'start';
+  });
   document.getElementById('btnOnline').addEventListener('click', ()=>{ ensureAudio(); openOnlineScreen(); });
   document.getElementById('btnBackToMode').addEventListener('click', ()=>{
     hideAllOverlays();
-    startScreen.classList.remove('hidden');
+    if(selectedMode==='team' || selectedMode==='2p'){
+      document.getElementById('teamScreen').classList.remove('hidden');
+    } else {
+      startScreen.classList.remove('hidden');
+    }
     gameState = 'start';
   });
   document.getElementById('btnBackToModeOnline').addEventListener('click', ()=>{
@@ -3274,6 +3561,15 @@
     gameState = 'start';
   });
   document.getElementById('btnCreateRoom').addEventListener('click', ()=>{ ensureAudio(); createRoom(); });
+  document.getElementById('onlineTeamModeCheck').addEventListener('change', (e)=>{
+    if(e.target.checked){
+      onlineMaxPlayers = 4;
+      if(fbDb && roomCode) fbDb.ref(roomPath(roomCode,'maxPlayers')).set(4);
+      renderOnlinePlayerCountRow();
+      renderOnlineRoster();
+    }
+    updateOnlineLobbyStatus();
+  });
   {
     const nickInput = document.getElementById('nicknameInput');
     if(nickInput){
